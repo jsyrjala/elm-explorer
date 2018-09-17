@@ -36,7 +36,7 @@ in the header. (This comes up during slow page transitions.)
 -}
 view : Page -> { title : String, content : Html msg } -> Document msg
 view page { title, content } =
-    { title = title ++ " - Conduit"
+    { title = title ++ " - nFlow Explorer"
     , body = viewHeader page :: content :: [ viewFooter ]
     }
 

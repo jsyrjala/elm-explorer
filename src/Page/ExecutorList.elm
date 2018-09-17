@@ -1,4 +1,4 @@
-module Page.ExecutorList exposing (Msg, Model, view, init, update, toSession)
+module Page.ExecutorList exposing (Msg, Model, view, init, update, toSession, subscriptions)
 
 {-|
 Executors list
@@ -8,6 +8,7 @@ import Html exposing (Html, table, th, tr, td, tbody, thead, text, div)
 import Session exposing (Session)
 import Http
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
+import Time exposing (Posix)
 
 type alias Model =
     { session: Session
@@ -20,6 +21,7 @@ type Msg
     = Reload
     | LoadResult (Result Http.Error (List Executor))
     | Error
+    | GotSession Session
 
 init : Session -> ( Model, Cmd Msg )
 init session =
@@ -33,6 +35,13 @@ init session =
 toSession : Model -> Session
 toSession model =
     model.session
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+      [ Session.changes GotSession (Session.navKey model.session)
+      , Time.every (60 * 1000.0) (\_ -> Reload)]
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -51,6 +60,8 @@ update msg model =
 
       _ -> (model, Cmd.none)
 
+
+-- TODO move to util
 formatTime: String -> String
 formatTime time =
     time

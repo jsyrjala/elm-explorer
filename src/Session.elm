@@ -1,4 +1,4 @@
-module Session exposing (Session, fromViewer, navKey)
+module Session exposing (Session, fromViewer, navKey, changes)
 
 import Browser.Navigation as Nav
 
@@ -25,15 +25,15 @@ navKey session =
 
 -- CHANGES
 
-{-
 changes : (Session -> msg) -> Nav.Key -> Sub msg
 changes toMsg key =
-    Api.viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer)) Viewer.decoder
+    Sub.none
+    -- Api.viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer)) Viewer.decoder
 
--}
 fromViewer : Nav.Key -> Session
 fromViewer key  =
     -- It's stored in localStorage as a JSON String;
     -- first decode the Value as a String, then
     -- decode that String as JSON.
     Guest key
+

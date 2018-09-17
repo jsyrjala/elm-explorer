@@ -40,6 +40,7 @@ type Msg
     | GotAboutMsg Page.About.Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDataMsg Page.Data.Msg
+    | GotSession Session
 
 toSession : Model -> Session
 toSession page =
@@ -122,6 +123,7 @@ update msg model =
 
 init : flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
+    -- TODO pass config.json via flags, and store it to Session
     changeRouteTo (Route.fromUrl url)
             (Redirect (Session.fromViewer navKey))
 
@@ -161,7 +163,24 @@ updateWith toModel toMsg model ( subModel, subCmd ) =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model of
+        NotFound _ ->
+            Sub.none
+
+        Redirect _ ->
+            Session.changes GotSession (Session.navKey (toSession model))
+
+        Data _ data ->
+            Sub.map GotDataMsg (Page.Data.subscriptions data)
+
+        Home home ->
+            Sub.map GotHomeMsg (Page.Home.subscriptions home)
+
+        About about ->
+            Sub.map GotAboutMsg (Page.About.subscriptions about)
+
+        ExecutorList executorList ->
+            Sub.map GotExecutorsMsg (Page.ExecutorList.subscriptions executorList)
 
 
 -- VIEW

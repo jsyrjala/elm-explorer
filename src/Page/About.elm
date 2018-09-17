@@ -1,4 +1,4 @@
-module Page.About exposing (view, Msg, Model, init, update, toSession)
+module Page.About exposing (view, Msg, Model, init, update, toSession, subscriptions)
 {-|
 About Page
 -}
@@ -13,12 +13,16 @@ type alias Model =
 
 type Msg
     = Opened
+    | GotSession Session
 
 
 toSession : Model -> Session
 toSession model =
     model.session
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Session.changes GotSession (Session.navKey model.session)
 
 init : Session -> ( Model, Cmd Msg )
 init session =

@@ -1,4 +1,4 @@
-module Page.Data exposing (view, Msg, Model, init, update, toSession)
+module Page.Data exposing (view, Msg, Model, init, update, toSession, subscriptions)
 {-|
 Example of query param usage
 -}
@@ -12,12 +12,15 @@ type alias Model =
 
 type Msg
     = Opened
-
+    | GotSession Session
 
 toSession : Model -> Session
 toSession model =
     model.session
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Session.changes GotSession (Session.navKey model.session)
 
 init : Session -> Int -> ( Model, Cmd Msg )
 init session id =

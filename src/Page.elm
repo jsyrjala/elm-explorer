@@ -20,6 +20,7 @@ type Page
     = Other
     | Home
     | Data
+    | ExecutorList
     | About
 
 
@@ -44,7 +45,7 @@ viewHeader page  =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
             [ a [ class "navbar-brand", Route.href Route.Home ]
-                [ text "conduit" ]
+                [ text "nFlow Explorer" ]
             , ul [ class "nav navbar-nav pull-xs-right" ] <|
                 navbarLink page Route.Home [ text "Home" ] :: viewMenu page
             ]
@@ -58,6 +59,7 @@ viewMenu page =
             navbarLink page
     in
     [ linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
+    , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
 
@@ -67,13 +69,7 @@ viewFooter : Html msg
 viewFooter =
     footer []
         [ div [ class "container" ]
-            [ a [ class "logo-font", href "/" ] [ text "conduit" ]
-            , span [ class "attribution" ]
-                [ text "An interactive learning project from "
-                , a [ href "https://thinkster.io" ] [ text "Thinkster" ]
-                , text ". Code & design licensed under MIT."
-                ]
-            ]
+            [ text "footer is here" ]
         ]
 
 
@@ -93,6 +89,9 @@ isActive page route =
             True
 
         ( Data, Route.Data _) ->
+            True
+
+        ( ExecutorList, Route.ExecutorList ) ->
             True
 
         _ ->

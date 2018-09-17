@@ -1,1 +1,2 @@
 - localStorage see elm-spa-example, index.html etc
+- HTTP / JSON example https://gist.github.com/nojaf/3d529a68e9a75850a42a8e1ebc040899

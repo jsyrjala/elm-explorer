@@ -19,6 +19,7 @@ type Route
     = Home
     | Root
     | Data Int
+    | ExecutorList
     | About
 
 
@@ -31,6 +32,7 @@ parser =
         [ Parser.map Home Parser.top
         , Parser.map Data (s "data" </> int)
         , Parser.map About (s "about")
+        , Parser.map ExecutorList (s "executors")
         ]
 
 
@@ -76,6 +78,9 @@ routeToString page =
 
                 About ->
                     [ "about" ]
+
+                ExecutorList ->
+                    [ "executors" ]
 
                 Data id ->
                     [ "data", String.fromInt id]

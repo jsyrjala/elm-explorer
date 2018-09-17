@@ -9,12 +9,14 @@ import Browser
 import Browser.Navigation as Nav
 import Page
 import Page.Blank
+import Page.ExecutorList
 import Page.NotFound
 import Route exposing (Route)
 import Url exposing (Url)
 import Page.Home
 import Page.About
 import Page.Data
+import Page.ExecutorList
 
 import Json.Decode as Decode exposing (Value)
 import Session exposing (Session)
@@ -26,6 +28,7 @@ type Model
     | NotFound Session
     | Home Page.Home.Model
     | About Page.About.Model
+    | ExecutorList Page.ExecutorList.Model
     | Data Int Page.Data.Model
 
 type Msg
@@ -35,6 +38,7 @@ type Msg
     | ClickedLink Browser.UrlRequest
     | GotHomeMsg Page.Home.Msg
     | GotAboutMsg Page.About.Msg
+    | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDataMsg Page.Data.Msg
 
 toSession : Model -> Session
@@ -54,6 +58,9 @@ toSession page =
 
         Data _ data ->
             Page.Data.toSession data
+
+        ExecutorList executors ->
+            Page.ExecutorList.toSession executors
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -104,6 +111,10 @@ update msg model =
             Page.Data.update subMsg data
                 |> updateWith (Data id) GotDataMsg model
 
+        ( GotExecutorsMsg subMsg, ExecutorList executors ) ->
+            Page.ExecutorList.update subMsg executors
+                |> updateWith ExecutorList GotExecutorsMsg model
+
         ( _, _ ) ->
             -- Disregard messages that arrived for the wrong page.
             ( model, Cmd.none )
@@ -130,6 +141,9 @@ changeRouteTo maybeRoute model =
         Just Route.About ->
             Page.About.init session
                 |> updateWith About GotAboutMsg model
+        Just Route.ExecutorList ->
+            Page.ExecutorList.init session
+                |> updateWith ExecutorList GotExecutorsMsg model
         Just (Route.Data id) ->
             Page.Data.init session id
                 |> updateWith (Data id) GotDataMsg model
@@ -181,6 +195,8 @@ view model =
         Data id data ->
             viewPage Page.Data GotDataMsg (Page.Data.view { data | id = id } )
 
+        ExecutorList executors ->
+            viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view executors)
 
 
 main : Program () Model Msg

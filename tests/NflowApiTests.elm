@@ -6,11 +6,12 @@ import Expect
 import Json.Decode as D
 import Json.Encode as E
 import Result
+import Http
 
 import Api.NflowApi as Api
 
-ex : Test
-ex =
+executorJson : Test
+executorJson =
     let
         jsonData = "{\"id\":1,\"host\":\"nbank-demo-1\",\"pid\":1197,\"executorGroup\":\"nflow\",\"started\":\"2018-08-16T18:14:38.170Z\",\"active\":\"2018-09-16T18:52:44.857Z\",\"expires\":\"2018-09-16T19:07:44.857Z\"}"
         executor = Api.Executor 1 "nbank-demo-1" 1197 "nflow" "2018-08-16T18:14:38.170Z" "2018-09-16T18:52:44.857Z" "2018-09-16T19:07:44.857Z"
@@ -32,3 +33,21 @@ ex =
                 in
                     Expect.equal jsonData encoded
         ]
+
+type ExecutorsMsg = ExecutorsFetch (Result.Result Http.Error (List Api.Executor))
+
+executorHttp : Test
+executorHttp =
+    let
+        a = 1
+    in
+    describe "Executor HTTP"
+      [ test "foo" <|
+        \_ ->
+           let
+              x = Api.fetchExecutors ExecutorsFetch
+           in
+              -- TODO improve test
+              Expect.equal 1 1
+              -- Expect.equal x (Cmd.none, ExecutorsFetch)
+      ]

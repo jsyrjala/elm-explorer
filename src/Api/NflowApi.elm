@@ -1,7 +1,9 @@
-module Api.NflowApi exposing (Executor, executorDecoder, executorEncoder)
+module Api.NflowApi exposing (Executor, executorDecoder, executorEncoder, fetchExecutors)
 
+import Http
 import Json.Decode as D
 import Json.Encode as E
+import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 
 -- [{"id":1,"host":"nbank-demo-1","pid":1197,"executorGroup":"nflow","started":"2018-08-16T18:14:38.170Z","active":"2018-09-16T18:52:44.857Z","expires":"2018-09-16T19:07:44.857Z"}]
 
@@ -27,16 +29,24 @@ executorEncoder executor =
     , ("expires", E.string executor.expires)
     ]
 
--- TODO use pipeline decoder
--- https://gist.github.com/nojaf/3d529a68e9a75850a42a8e1ebc040899
-executorDecoder : D.Decoder Executor
+-- https://package.elm-lang.org/packages/NoRedInk/elm-json-decode-pipeline/latest/
+executorDecoder: D.Decoder Executor
 executorDecoder =
-    D.map7 Executor
-      (D.field "id" D.int)
-      (D.field "host" D.string)
-      (D.field "pid" D.int)
-      (D.field "executorGroup" D.string)
-      (D.field "started" D.string)
-      (D.field "active" D.string)
-      (D.field "expires" D.string)
+    D.succeed Executor
+      |> required "id" D.int
+      |> required "host" D.string
+      |> required "pid" D.int
+      |> required "executorGroup" D.string
+      |> required "started" D.string
+      |> required "active" D.string
+      |> required "expires" D.string
 
+executorListDecoder : D.Decoder (List Executor)
+executorListDecoder =
+    D.list executorDecoder
+
+-- TODO config, baseUrl
+fetchExecutors: (Result Http.Error (List Executor) -> msg) -> Cmd msg
+fetchExecutors resultMsg =
+            Http.send resultMsg <|
+                        Http.get "http://bank.nflow.io/nflow/api/nflow/v1/workflow-executor" executorListDecoder

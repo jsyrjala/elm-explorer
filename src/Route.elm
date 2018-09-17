@@ -20,6 +20,7 @@ type Route
     | Root
     | Data Int
     | ExecutorList
+    | DefinitionList
     | About
 
 
@@ -33,6 +34,7 @@ parser =
         , Parser.map Data (s "data" </> int)
         , Parser.map About (s "about")
         , Parser.map ExecutorList (s "executors")
+        , Parser.map DefinitionList (s "definitions") -- TODO move to home page
         ]
 
 
@@ -81,6 +83,9 @@ routeToString page =
 
                 ExecutorList ->
                     [ "executors" ]
+
+                DefinitionList ->
+                    [ "definitions" ] -- TODO to homepage
 
                 Data id ->
                     [ "data", String.fromInt id]

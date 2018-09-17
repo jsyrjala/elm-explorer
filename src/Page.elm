@@ -21,6 +21,7 @@ type Page
     | Home
     | Data
     | ExecutorList
+    | DefinitionList
     | About
 
 
@@ -59,6 +60,8 @@ viewMenu page =
             navbarLink page
     in
     [ linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
+    -- TODO to home page
+    , linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
@@ -92,6 +95,9 @@ isActive page route =
             True
 
         ( ExecutorList, Route.ExecutorList ) ->
+            True
+
+        ( DefinitionList, Route.DefinitionList ) ->
             True
 
         _ ->

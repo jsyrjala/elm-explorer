@@ -1,9 +1,12 @@
-module Api.NflowApi exposing (Executor, executorDecoder, executorEncoder, fetchExecutors)
+module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
+                             , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder)
 
 import Http
 import Json.Decode as D
 import Json.Encode as E
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+
+-- Executor
 
 -- [{"id":1,"host":"nbank-demo-1","pid":1197,"executorGroup":"nflow","started":"2018-08-16T18:14:38.170Z","active":"2018-09-16T18:52:44.857Z","expires":"2018-09-16T19:07:44.857Z"}]
 
@@ -45,8 +48,55 @@ executorListDecoder : D.Decoder (List Executor)
 executorListDecoder =
     D.list executorDecoder
 
--- TODO config, baseUrl
+-- TODO config, baseUrl, read from session
 fetchExecutors: (Result Http.Error (List Executor) -> msg) -> Cmd msg
 fetchExecutors resultMsg =
             Http.send resultMsg <|
                         Http.get "http://bank.nflow.io/nflow/api/nflow/v1/workflow-executor" executorListDecoder
+
+-- WorkflowDefinition
+
+type alias State =
+    { id: String
+    , stateType: String -- TODO strict typing?
+    , description: Maybe String
+    , transition: List String
+    , onFailure: Maybe String
+    }
+
+type alias WorkflowDef =
+    { definitionType: String
+    , name: Maybe String
+    , description: Maybe String
+    , onError: Maybe String
+    , states: List State
+    }
+
+stateDecoder: D.Decoder State
+stateDecoder =
+    D.succeed State
+      |> required "id" D.string
+      |> required "type" D.string
+      |> optional "description" (D.nullable D.string) Nothing
+      |> optional "transitions" (D.list D.string) []
+      |> optional "onFailure" (D.nullable D.string) Nothing
+
+workflowDefDecoder: D.Decoder WorkflowDef
+workflowDefDecoder =
+    D.succeed WorkflowDef
+      |> required "type" D.string
+      -- nullable allows null value
+      -- optional allows that key is missing
+      |> optional "name" (D.nullable D.string) Nothing
+      |> optional "description" (D.nullable D.string) Nothing
+      |> optional "onError" (D.nullable D.string) Nothing
+      |> optional "states" (D.list stateDecoder) []
+
+workflowDefListDecoder : D.Decoder (List WorkflowDef)
+workflowDefListDecoder =
+    D.list workflowDefDecoder
+
+fetchWorkflowDefs: (Result Http.Error (List WorkflowDef) -> msg) -> Cmd msg
+fetchWorkflowDefs resultMsg =
+            Http.send resultMsg <|
+                        Http.get "http://bank.nflow.io/nflow/api/nflow/v1/workflow-definition" workflowDefListDecoder

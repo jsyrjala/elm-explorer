@@ -10,6 +10,7 @@ import Browser.Navigation as Nav
 import Page
 import Page.Blank
 import Page.ExecutorList
+import Page.DefinitionList
 import Page.NotFound
 import Route exposing (Route)
 import Url exposing (Url)
@@ -29,6 +30,7 @@ type Model
     | Home Page.Home.Model
     | About Page.About.Model
     | ExecutorList Page.ExecutorList.Model
+    | DefinitionList Page.DefinitionList.Model
     | Data Int Page.Data.Model
 
 type Msg
@@ -39,6 +41,7 @@ type Msg
     | GotHomeMsg Page.Home.Msg
     | GotAboutMsg Page.About.Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
+    | GotDefinitionsMsg Page.DefinitionList.Msg
     | GotDataMsg Page.Data.Msg
     | GotSession Session
 
@@ -51,17 +54,20 @@ toSession page =
         NotFound session ->
             session
 
-        Home home ->
-            Page.Home.toSession home
+        Home subModel ->
+            Page.Home.toSession subModel
 
-        About about ->
-            Page.About.toSession about
+        About subModel ->
+            Page.About.toSession subModel
 
-        Data _ data ->
-            Page.Data.toSession data
+        Data _ subModel ->
+            Page.Data.toSession subModel
 
-        ExecutorList executors ->
-            Page.ExecutorList.toSession executors
+        ExecutorList subModel ->
+            Page.ExecutorList.toSession subModel
+
+        DefinitionList subModel ->
+            Page.DefinitionList.toSession subModel
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -100,21 +106,25 @@ update msg model =
         ( ChangedRoute route, _ ) ->
             changeRouteTo route model
 
-        ( GotHomeMsg subMsg, Home home ) ->
-            Page.Home.update subMsg home
+        ( GotHomeMsg subMsg, Home subModel ) ->
+            Page.Home.update subMsg subModel
                 |> updateWith Home GotHomeMsg model
 
-        ( GotAboutMsg subMsg, About about ) ->
-            Page.About.update subMsg about
+        ( GotAboutMsg subMsg, About subModel ) ->
+            Page.About.update subMsg subModel
                 |> updateWith About GotAboutMsg model
 
-        ( GotDataMsg subMsg, Data id data ) ->
-            Page.Data.update subMsg data
+        ( GotDataMsg subMsg, Data id subModel ) ->
+            Page.Data.update subMsg subModel
                 |> updateWith (Data id) GotDataMsg model
 
-        ( GotExecutorsMsg subMsg, ExecutorList executors ) ->
-            Page.ExecutorList.update subMsg executors
+        ( GotExecutorsMsg subMsg, ExecutorList subModel ) ->
+            Page.ExecutorList.update subMsg subModel
                 |> updateWith ExecutorList GotExecutorsMsg model
+
+        ( GotDefinitionsMsg subMsg, DefinitionList subModel ) ->
+            Page.DefinitionList.update subMsg subModel
+                |> updateWith DefinitionList GotDefinitionsMsg model
 
         ( _, _ ) ->
             -- Disregard messages that arrived for the wrong page.
@@ -146,6 +156,9 @@ changeRouteTo maybeRoute model =
         Just Route.ExecutorList ->
             Page.ExecutorList.init session
                 |> updateWith ExecutorList GotExecutorsMsg model
+        Just Route.DefinitionList ->
+            Page.DefinitionList.init session
+                |> updateWith DefinitionList GotDefinitionsMsg model
         Just (Route.Data id) ->
             Page.Data.init session id
                 |> updateWith (Data id) GotDataMsg model
@@ -170,18 +183,20 @@ subscriptions model =
         Redirect _ ->
             Session.changes GotSession (Session.navKey (toSession model))
 
-        Data _ data ->
-            Sub.map GotDataMsg (Page.Data.subscriptions data)
+        Data _ subModel ->
+            Sub.map GotDataMsg (Page.Data.subscriptions subModel)
 
-        Home home ->
-            Sub.map GotHomeMsg (Page.Home.subscriptions home)
+        Home subModel ->
+            Sub.map GotHomeMsg (Page.Home.subscriptions subModel)
 
-        About about ->
-            Sub.map GotAboutMsg (Page.About.subscriptions about)
+        About subModel ->
+            Sub.map GotAboutMsg (Page.About.subscriptions subModel)
 
-        ExecutorList executorList ->
-            Sub.map GotExecutorsMsg (Page.ExecutorList.subscriptions executorList)
+        ExecutorList subModel ->
+            Sub.map GotExecutorsMsg (Page.ExecutorList.subscriptions subModel)
 
+        DefinitionList subModel ->
+            Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
 
 -- VIEW
 
@@ -205,18 +220,20 @@ view model =
         NotFound _ ->
             viewPage Page.Other (\_ -> Ignored) Page.NotFound.view
 
-        Home home ->
-            viewPage Page.Home GotHomeMsg (Page.Home.view home)
+        Home subModel ->
+            viewPage Page.Home GotHomeMsg (Page.Home.view subModel)
 
-        About about ->
-            viewPage Page.About GotAboutMsg (Page.About.view about)
+        About subModel ->
+            viewPage Page.About GotAboutMsg (Page.About.view subModel)
 
-        Data id data ->
-            viewPage Page.Data GotDataMsg (Page.Data.view { data | id = id } )
+        Data id subModel ->
+            viewPage Page.Data GotDataMsg (Page.Data.view { subModel | id = id } )
 
-        ExecutorList executors ->
-            viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view executors)
+        ExecutorList subModel ->
+            viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)
 
+        DefinitionList subModel ->
+            viewPage Page.DefinitionList GotDefinitionsMsg (Page.DefinitionList.view subModel)
 
 main : Program () Model Msg
 main =

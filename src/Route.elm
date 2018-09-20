@@ -1,9 +1,9 @@
-module Route exposing (Route(..), fromUrl, href, replaceUrl)
+module Route exposing (Route(..), fromUrl, href, replaceUrl, linkTo)
 {-| Route implements URL based routing.
 
 -}
 import Browser.Navigation as Nav
-import Html exposing (Attribute)
+import Html exposing (Attribute, Html, a)
 import Html.Attributes as Attr
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, string)
@@ -63,7 +63,9 @@ fromUrl url =
     { url | path = Maybe.withDefault url.path url.fragment, fragment = Nothing }
         |> Parser.parse parser
 
-
+linkTo: Route -> (List (Html msg)) -> Html msg
+linkTo route linkContent =
+  a [ href route ] linkContent
 
 -- INTERNAL
 

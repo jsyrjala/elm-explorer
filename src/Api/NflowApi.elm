@@ -9,6 +9,8 @@ import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 -- Executor
 
 -- [{"id":1,"host":"nbank-demo-1","pid":1197,"executorGroup":"nflow","started":"2018-08-16T18:14:38.170Z","active":"2018-09-16T18:52:44.857Z","expires":"2018-09-16T19:07:44.857Z"}]
+baseUrl = "http://bank.nflow.io/nflow/api/v1/"
+
 
 type alias Executor =
      { id: Int
@@ -52,7 +54,7 @@ executorListDecoder =
 fetchExecutors: (Result Http.Error (List Executor) -> msg) -> Cmd msg
 fetchExecutors resultMsg =
             Http.send resultMsg <|
-                        Http.get "http://bank.nflow.io/nflow/api/nflow/v1/workflow-executor" executorListDecoder
+                        Http.get (baseUrl ++ "workflow-executor") executorListDecoder
 
 -- WorkflowDefinition
 
@@ -99,4 +101,4 @@ workflowDefListDecoder =
 fetchWorkflowDefs: (Result Http.Error (List WorkflowDef) -> msg) -> Cmd msg
 fetchWorkflowDefs resultMsg =
             Http.send resultMsg <|
-                        Http.get "http://bank.nflow.io/nflow/api/nflow/v1/workflow-definition" workflowDefListDecoder
+                        Http.get (baseUrl ++ "workflow-definition") workflowDefListDecoder

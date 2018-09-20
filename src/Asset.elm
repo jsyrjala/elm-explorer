@@ -22,7 +22,7 @@ type Image
 
 error : Image
 error =
-    image "error.jpg"
+    image "logo.svg"
 
 
 loading : Image
@@ -32,7 +32,7 @@ loading =
 
 image : String -> Image
 image filename =
-    Image ("/assets/images/" ++ filename)
+    Image ("/" ++ filename)
 
 
 

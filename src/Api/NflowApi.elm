@@ -1,5 +1,7 @@
 module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
-                             , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder)
+                             , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder
+                             , WorkflowSummary, searchWorkflows, workflowSummaryDecoder
+                             )
 
 import Http
 import Json.Decode as D
@@ -102,3 +104,53 @@ fetchWorkflowDefs: (Result Http.Error (List WorkflowDef) -> msg) -> Cmd msg
 fetchWorkflowDefs resultMsg =
             Http.send resultMsg <|
                         Http.get (baseUrl ++ "workflow-definition") workflowDefListDecoder
+
+
+-- WorkflowSummary
+
+type alias WorkflowSummary =
+    { id: Int
+    , businessKey: Maybe String
+    , externalId: String
+    , state: String
+    , stateText: String
+    , status: String
+    , workflowType: String
+    , retries: Int
+    , nextActivation: Maybe String -- TODO timestamp
+    , started: Maybe String -- TODO timestamp
+    , parentActionId: Maybe Int
+    , parentWorkflowId: Maybe Int
+    , created: String -- TODO timestamp
+    , modified: String -- TODO timestamp
+    }
+
+
+workflowSummaryDecoder: D.Decoder WorkflowSummary
+workflowSummaryDecoder =
+    D.succeed WorkflowSummary
+      |> required "id" D.int
+      |> optional "businessKey" (D.nullable D.string) Nothing
+      |> required "externalId" D.string
+      |> required "state" D.string
+      |> required "stateText" D.string
+      |> required "status" D.string
+      |> required "type" D.string
+      |> required "retries" D.int
+      |> optional "nextActivation" (D.nullable D.string) Nothing
+      |> optional "started" (D.nullable D.string) Nothing
+      |> optional "parentActionId" (D.nullable D.int) Nothing
+      |> optional "parentWorkflowId" (D.nullable D.int) Nothing
+      |> required "created" D.string
+      |> required "modified" D.string
+
+workflowSummaryListDecoder : D.Decoder (List WorkflowSummary)
+workflowSummaryListDecoder =
+    D.list workflowSummaryDecoder
+
+
+-- TODO query parameters
+searchWorkflows: (Result Http.Error (List WorkflowSummary) -> msg) -> Cmd msg
+searchWorkflows resultMsg =
+            Http.send resultMsg <|
+                        Http.get (baseUrl ++ "workflow-instance") workflowSummaryListDecoder

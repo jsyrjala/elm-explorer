@@ -9,6 +9,7 @@ import Session exposing (Session)
 import Http
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
 import Time exposing (Posix)
+import Util exposing (spinner)
 
 type alias Model =
     { session: Session
@@ -53,12 +54,6 @@ update msg model =
 
       _ -> (model, Cmd.none)
 
-
--- TODO move to util
-formatTime: String -> String
-formatTime time =
-    time
-
 workflowDefRow: WorkflowDef -> Html msg
 workflowDefRow workflowDef =
   tr []
@@ -89,9 +84,8 @@ view model =
     { title = "Workflow Definitions"
     , content = div [] (
       if model.loading then
-        -- TODO show spinner
         -- TODO show load failed error
-        [text "loading"]
+        [spinner]
       else
          let
            _ = Debug.log "xxx" model

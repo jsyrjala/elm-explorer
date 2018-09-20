@@ -10,6 +10,8 @@ import Http
 
 import Api.NflowApi as Api
 
+-- Executors
+
 executorJson : Test
 executorJson =
     let
@@ -49,6 +51,8 @@ executorHttp =
               -- Expect.equal x (Cmd.none, ExecutorsFetch)
       ]
 
+-- WorkflowDef
+
 workflowDefJson : Test
 workflowDefJson =
     let
@@ -76,6 +80,112 @@ workflowDefHttp =
         \_ ->
            let
               x = Api.fetchWorkflowDefs WorkflowDefFetch
+           in
+              -- TODO improve test
+              Expect.equal 1 1
+              -- Expect.equal x (Cmd.none, WorkflowDefFetch)
+      ]
+
+
+-- WorkflowSummary
+
+
+workflowSummaryJson : Test
+workflowSummaryJson =
+    describe "WorkflowSummary"
+         [ test "workflowSummaryDecoder parses data" <|
+            \_ ->
+                let
+                    jsonData = """
+                    {"id":4,
+                    "status":"finished",
+                    "type":"creditDecision",
+                    "parentWorkflowId":3,
+                    "parentActionId":15,
+                    "businessKey":"2",
+                    "externalId":"078aeaa6-1295-4ef1-9766-a208d9349083",
+                    "state":"approved",
+                    "stateText":"Stopped in state approved",
+                    "retries":0,
+                    "created":"2018-09-20T07:26:05.961Z",
+                    "modified":"2018-09-20T07:26:12.947Z"}
+                    """
+                    workflowSummary = Api.WorkflowSummary
+                             4
+                             (Just "2")
+                             "078aeaa6-1295-4ef1-9766-a208d9349083"
+                             "approved"
+                             "Stopped in state approved"
+                             "finished"
+                             "creditDecision"
+                             0
+                             Nothing
+                             Nothing
+                             (Just 15)
+                             (Just 3)
+                             "2018-09-20T07:26:05.961Z"
+                             "2018-09-20T07:26:12.947Z"
+
+                    parsed = D.decodeString Api.workflowSummaryDecoder jsonData
+                in
+                case parsed of
+                    Result.Ok value -> Expect.equal workflowSummary value -- TODO implement better
+                    Result.Err err -> Expect.fail "parsing failed"
+
+         , test "workflowSummaryDecoder parses data part 2" <|
+           \_ ->
+               let
+                   jsonData = """
+                   {"id":3,
+                   "status":"inProgress",
+                   "type":"processCreditApplication",
+                   "externalId":"00d5b780-eab6-4f14-999f-0dd35e11750b",
+                   "state":"transferMoney",
+                   "stateText":"com.sun.jersey.api.client.UniformInterfaceException: Client response status: 503\\n\\tat com.sun.jersey.api.client.WebResource.ha...",
+                   "nextActivation":"2018-09-21T00:28:15.539Z",
+                   "started":"2018-09-21T00:28:10.000Z",
+                   "retries":9,
+                   "created":"2018-09-20T07:26:05.392Z",
+                   "modified":"2018-09-20T15:56:15.539Z"}
+                   """
+                   workflowSummary = Api.WorkflowSummary
+                            3
+                            Nothing
+                            "00d5b780-eab6-4f14-999f-0dd35e11750b"
+                            "transferMoney"
+                            "com.sun.jersey.api.client.UniformInterfaceException: Client response status: 503\n\tat com.sun.jersey.api.client.WebResource.ha..."
+                            "inProgress"
+                            "processCreditApplication"
+                            9
+                            (Just "2018-09-21T00:28:15.539Z")
+                            (Just "2018-09-21T00:28:10.000Z")
+                            Nothing
+                            Nothing
+                            "2018-09-20T07:26:05.392Z"
+                            "2018-09-20T15:56:15.539Z"
+
+                   parsed = D.decodeString Api.workflowSummaryDecoder jsonData
+               in
+               case parsed of
+                   Result.Ok value -> Expect.equal workflowSummary value -- TODO implement better
+                   Result.Err err ->
+                       let
+                         _ = Debug.log "error" err
+                       in
+                       Expect.fail "parsing failed"
+
+         ]
+
+
+type WorkflowSummaryMsg = WorkflowSummaryFetch (Result.Result Http.Error (List Api.WorkflowSummary))
+
+workflowSummaryHttp : Test
+workflowSummaryHttp =
+    describe "WorkflowSummary HTTP"
+      [ test "foo" <|
+        \_ ->
+           let
+              x = Api.searchWorkflows WorkflowSummaryFetch
            in
               -- TODO improve test
               Expect.equal 1 1

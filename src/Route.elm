@@ -21,6 +21,7 @@ type Route
     | Data Int
     | ExecutorList
     | DefinitionList
+    | Search
     | About
 
 
@@ -35,6 +36,7 @@ parser =
         , Parser.map About (s "about")
         , Parser.map ExecutorList (s "executors")
         , Parser.map DefinitionList (s "definitions") -- TODO move to home page
+        , Parser.map Search (s "search")
         ]
 
 
@@ -89,6 +91,9 @@ routeToString page =
 
                 Data id ->
                     [ "data", String.fromInt id]
+
+                Search ->
+                    [ "search" ]
 
     in
     "#/" ++ String.join "/" pieces

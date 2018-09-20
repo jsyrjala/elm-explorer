@@ -12,6 +12,7 @@ import Page.Blank
 import Page.ExecutorList
 import Page.DefinitionList
 import Page.NotFound
+import Page.Search
 import Route exposing (Route)
 import Url exposing (Url)
 import Page.Home
@@ -32,9 +33,11 @@ type Model
     | ExecutorList Page.ExecutorList.Model
     | DefinitionList Page.DefinitionList.Model
     | Data Int Page.Data.Model
+    | Search Page.Search.Model
 
 type Msg
     = Ignored
+    | GotSession Session
     | ChangedRoute (Maybe Route)
     | ChangedUrl Url
     | ClickedLink Browser.UrlRequest
@@ -43,7 +46,7 @@ type Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDefinitionsMsg Page.DefinitionList.Msg
     | GotDataMsg Page.Data.Msg
-    | GotSession Session
+    | GotSearchMsg Page.Search.Msg
 
 toSession : Model -> Session
 toSession page =
@@ -68,6 +71,9 @@ toSession page =
 
         DefinitionList subModel ->
             Page.DefinitionList.toSession subModel
+
+        Search subModel ->
+            Page.Search.toSession subModel
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -126,6 +132,10 @@ update msg model =
             Page.DefinitionList.update subMsg subModel
                 |> updateWith DefinitionList GotDefinitionsMsg model
 
+        ( GotSearchMsg subMsg, Search subModel ) ->
+            Page.Search.update subMsg subModel
+                |> updateWith Search GotSearchMsg model
+
         ( _, _ ) ->
             -- Disregard messages that arrived for the wrong page.
             ( model, Cmd.none )
@@ -162,6 +172,10 @@ changeRouteTo maybeRoute model =
         Just (Route.Data id) ->
             Page.Data.init session id
                 |> updateWith (Data id) GotDataMsg model
+        Just Route.Search ->
+            Page.Search.init session
+                |> updateWith Search GotSearchMsg model
+
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
 updateWith toModel toMsg model ( subModel, subCmd ) =
@@ -197,6 +211,9 @@ subscriptions model =
 
         DefinitionList subModel ->
             Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
+
+        Search subModel ->
+            Sub.map GotSearchMsg (Page.Search.subscriptions subModel)
 
 -- VIEW
 
@@ -234,6 +251,9 @@ view model =
 
         DefinitionList subModel ->
             viewPage Page.DefinitionList GotDefinitionsMsg (Page.DefinitionList.view subModel)
+
+        Search subModel ->
+            viewPage Page.Search GotSearchMsg (Page.Search.view subModel)
 
 main : Program () Model Msg
 main =

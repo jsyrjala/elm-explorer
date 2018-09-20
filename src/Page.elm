@@ -23,6 +23,7 @@ type Page
     | ExecutorList
     | DefinitionList
     | About
+    | Search
 
 
 {-| Take a page's Html and frames it with a header and footer.
@@ -59,9 +60,11 @@ viewMenu page =
         linkTo =
             navbarLink page
     in
-    [ linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
+
+    [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
+    , linkTo Route.Search [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
     -- TODO to home page
-    , linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
+    , linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
@@ -98,6 +101,9 @@ isActive page route =
             True
 
         ( DefinitionList, Route.DefinitionList ) ->
+            True
+
+        ( Search, Route.Search ) ->
             True
 
         _ ->

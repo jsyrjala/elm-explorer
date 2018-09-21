@@ -3,6 +3,7 @@ module Main exposing (main)
 
 -}
 
+import Api.NflowApi
 import Debug exposing (log)
 import Html exposing (..)
 import Browser
@@ -141,8 +142,12 @@ update msg model =
             ( model, Cmd.none )
 
 
-init : flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
+    let
+        maybeFlags = Decode.decodeValue Api.NflowApi.flagsDecoder flags
+        _ = Debug.log "init" maybeFlags
+    in
     -- TODO pass config.json via flags, and store it to Session
     changeRouteTo (Route.fromUrl url)
             (Redirect (Session.fromViewer navKey))
@@ -255,7 +260,7 @@ view model =
         Search subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)
 
-main : Program () Model Msg
+main : Program Decode.Value Model Msg
 main =
     let _ = log "start" "now"
     in

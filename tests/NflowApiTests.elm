@@ -8,7 +8,7 @@ import Json.Encode as E
 import Result
 import Http
 
-import Api.NflowApi as Api
+import Api.NflowApi as Api exposing (Config)
 
 -- Executors
 
@@ -191,3 +191,29 @@ workflowSummaryHttp =
               Expect.equal 1 1
               -- Expect.equal x (Cmd.none, WorkflowDefFetch)
       ]
+
+-- Config, Flags
+
+flagsJson : Test
+flagsJson =
+    describe "Flags"
+         [ test "flagsDecoder parses data" <|
+            \_ ->
+                let
+                    jsonData = """
+                    {"config":{
+                        "baseUrl": "http://example.com"
+                      }
+                    }
+                    """
+                    config = Config
+                              "http://example.com"
+                    flags = Api.Flags
+                             config
+
+                    parsed = D.decodeString Api.flagsDecoder jsonData
+                in
+                case parsed of
+                    Result.Ok value -> Expect.equal flags value -- TODO implement better
+                    Result.Err err -> Expect.fail "parsing failed"
+         ]

@@ -1,6 +1,7 @@
 module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
                              , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder
                              , WorkflowSummary, searchWorkflows, workflowSummaryDecoder
+                             , Config, Flags, configDecoder, flagsDecoder
                              )
 
 import Http
@@ -154,3 +155,24 @@ searchWorkflows: (Result Http.Error (List WorkflowSummary) -> msg) -> Cmd msg
 searchWorkflows resultMsg =
             Http.send resultMsg <|
                         Http.get (baseUrl ++ "workflow-instance") workflowSummaryListDecoder
+
+
+-- Config (nflow-config.json)
+
+type alias Config =
+  { baseUrl: String
+  }
+
+type alias Flags =
+  { config: Config
+  }
+
+configDecoder: D.Decoder Config
+configDecoder =
+    D.succeed Config
+      |> required "baseUrl" D.string
+
+flagsDecoder: D.Decoder Flags
+flagsDecoder =
+    D.succeed Flags
+      |> required "config" configDecoder

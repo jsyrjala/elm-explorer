@@ -10,8 +10,6 @@ import Browser.Navigation as Nav
 type Session
     = Guest Nav.Key
 
-
-
 -- INFO
 
 navKey : Session -> Nav.Key

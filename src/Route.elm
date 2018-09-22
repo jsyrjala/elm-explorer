@@ -16,8 +16,7 @@ import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, string)
 
 -}
 type Route
-    = Home
-    | Root
+    = Root
     | Data Int
     | ExecutorList
     | DefinitionList
@@ -31,11 +30,10 @@ type Route
 parser : Parser (Route -> a) a
 parser =
     oneOf
-        [ Parser.map Home Parser.top
+        [ Parser.map DefinitionList Parser.top
         , Parser.map Data (s "data" </> int)
         , Parser.map About (s "about")
         , Parser.map ExecutorList (s "executors")
-        , Parser.map DefinitionList (s "definitions") -- TODO move to home page
         , Parser.map Search (s "search")
         ]
 
@@ -76,10 +74,10 @@ routeToString page =
     let
         pieces =
             case page of
-                Home ->
+                Root ->
                     []
 
-                Root ->
+                DefinitionList ->
                     []
 
                 About ->
@@ -87,9 +85,6 @@ routeToString page =
 
                 ExecutorList ->
                     [ "executors" ]
-
-                DefinitionList ->
-                    [ "definitions" ] -- TODO to homepage
 
                 Data id ->
                     [ "data", String.fromInt id]

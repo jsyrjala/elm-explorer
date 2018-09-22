@@ -16,7 +16,6 @@ import Page.NotFound
 import Page.Search
 import Route exposing (Route)
 import Url exposing (Url)
-import Page.Home
 import Page.About
 import Page.Data
 import Page.ExecutorList
@@ -31,10 +30,9 @@ type Model
     = Redirect Session
     | NotFound Session
     | Error
-    | Home Page.Home.Model
+    | DefinitionList Page.DefinitionList.Model
     | About Page.About.Model
     | ExecutorList Page.ExecutorList.Model
-    | DefinitionList Page.DefinitionList.Model
     | Data Int Page.Data.Model
     | Search Page.Search.Model
 
@@ -44,7 +42,6 @@ type Msg
     | ChangedRoute (Maybe Route)
     | ChangedUrl Url
     | ClickedLink Browser.UrlRequest
-    | GotHomeMsg Page.Home.Msg
     | GotAboutMsg Page.About.Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDefinitionsMsg Page.DefinitionList.Msg
@@ -63,8 +60,8 @@ toSession page =
         NotFound session ->
             Just session
 
-        Home subModel ->
-            Just (Page.Home.toSession subModel)
+        DefinitionList subModel ->
+            Just (Page.DefinitionList.toSession subModel)
 
         About subModel ->
             Just (Page.About.toSession subModel)
@@ -74,9 +71,6 @@ toSession page =
 
         ExecutorList subModel ->
             Just (Page.ExecutorList.toSession subModel)
-
-        DefinitionList subModel ->
-            Just (Page.DefinitionList.toSession subModel)
 
         Search subModel ->
             Just (Page.Search.toSession subModel)
@@ -126,9 +120,9 @@ update msg model =
         ( ChangedRoute route, _ ) ->
             changeRouteTo route model
 
-        ( GotHomeMsg subMsg, Home subModel ) ->
-            Page.Home.update subMsg subModel
-                |> updateWith Home GotHomeMsg model
+        ( GotDefinitionsMsg subMsg, DefinitionList subModel ) ->
+            Page.DefinitionList.update subMsg subModel
+                |> updateWith DefinitionList GotDefinitionsMsg model
 
         ( GotAboutMsg subMsg, About subModel ) ->
             Page.About.update subMsg subModel
@@ -141,10 +135,6 @@ update msg model =
         ( GotExecutorsMsg subMsg, ExecutorList subModel ) ->
             Page.ExecutorList.update subMsg subModel
                 |> updateWith ExecutorList GotExecutorsMsg model
-
-        ( GotDefinitionsMsg subMsg, DefinitionList subModel ) ->
-            Page.DefinitionList.update subMsg subModel
-                |> updateWith DefinitionList GotDefinitionsMsg model
 
         ( GotSearchMsg subMsg, Search subModel ) ->
             Page.Search.update subMsg subModel
@@ -182,19 +172,16 @@ changeRouteTo maybeRoute model =
                 Nothing ->
                     ( NotFound session, Cmd.none )
                 Just Route.Root ->
-                    ( model, Route.replaceUrl (Session.navKey session) Route.Home )
-                Just Route.Home ->
-                    Page.Home.init session
-                        |> updateWith Home GotHomeMsg model
+                    ( model, Route.replaceUrl (Session.navKey session) Route.DefinitionList )
+                Just Route.DefinitionList ->
+                    Page.DefinitionList.init session
+                        |> updateWith DefinitionList GotDefinitionsMsg model
                 Just Route.About ->
                     Page.About.init session
                         |> updateWith About GotAboutMsg model
                 Just Route.ExecutorList ->
                     Page.ExecutorList.init session
                         |> updateWith ExecutorList GotExecutorsMsg model
-                Just Route.DefinitionList ->
-                    Page.DefinitionList.init session
-                        |> updateWith DefinitionList GotDefinitionsMsg model
                 Just (Route.Data id) ->
                     Page.Data.init session id
                         |> updateWith (Data id) GotDataMsg model
@@ -233,17 +220,14 @@ subscriptions model =
         Data _ subModel ->
             Sub.map GotDataMsg (Page.Data.subscriptions subModel)
 
-        Home subModel ->
-            Sub.map GotHomeMsg (Page.Home.subscriptions subModel)
+        DefinitionList subModel ->
+            Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
 
         About subModel ->
             Sub.map GotAboutMsg (Page.About.subscriptions subModel)
 
         ExecutorList subModel ->
             Sub.map GotExecutorsMsg (Page.ExecutorList.subscriptions subModel)
-
-        DefinitionList subModel ->
-            Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
 
         Search subModel ->
             Sub.map GotSearchMsg (Page.Search.subscriptions subModel)
@@ -279,8 +263,8 @@ view model =
         NotFound _ ->
             viewPage Page.Other (\_ -> Ignored) Page.NotFound.view
 
-        Home subModel ->
-            viewPage Page.Home GotHomeMsg (Page.Home.view subModel)
+        DefinitionList subModel ->
+            viewPage Page.DefinitionList GotDefinitionsMsg (Page.DefinitionList.view subModel)
 
         About subModel ->
             viewPage Page.About GotAboutMsg (Page.About.view subModel)
@@ -290,9 +274,6 @@ view model =
 
         ExecutorList subModel ->
             viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)
-
-        DefinitionList subModel ->
-            viewPage Page.DefinitionList GotDefinitionsMsg (Page.DefinitionList.view subModel)
 
         Search subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)

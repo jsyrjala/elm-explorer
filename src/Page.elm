@@ -18,10 +18,9 @@ under Other.
 -}
 type Page
     = Other
-    | Home
+    | DefinitionList
     | Data
     | ExecutorList
-    | DefinitionList
     | About
     | Search
 
@@ -46,10 +45,10 @@ viewHeader : Page -> Html msg
 viewHeader page  =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
-            [ a [ class "navbar-brand", Route.href Route.Home ]
+            [ a [ class "navbar-brand", Route.href Route.DefinitionList ]
                 [ text "nFlow Explorer" ]
             , ul [ class "nav navbar-nav pull-xs-right" ] <|
-                navbarLink page Route.Home [ text "Home" ] :: viewMenu page
+                viewMenu page
             ]
         ]
 
@@ -63,7 +62,6 @@ viewMenu page =
 
     [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
     , linkTo Route.Search [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
-    -- TODO to home page
     , linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
@@ -88,10 +86,7 @@ navbarLink page route linkContent =
 isActive : Page -> Route -> Bool
 isActive page route =
     case ( page, route ) of
-        ( Home, Route.Home ) ->
-            True
-
-        ( About, Route.About ) ->
+        ( DefinitionList, Route.DefinitionList ) ->
             True
 
         ( Data, Route.Data _) ->
@@ -100,10 +95,10 @@ isActive page route =
         ( ExecutorList, Route.ExecutorList ) ->
             True
 
-        ( DefinitionList, Route.DefinitionList ) ->
+        ( Search, Route.Search ) ->
             True
 
-        ( Search, Route.Search ) ->
+        ( About, Route.About ) ->
             True
 
         _ ->

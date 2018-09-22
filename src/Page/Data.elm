@@ -33,7 +33,11 @@ init session id =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  (model, Cmd.none)
+    case msg of
+      GotSession session ->
+         ( { model | session = session }, Cmd.none )
+
+      _ -> (model, Cmd.none)
 
 
 view : Model -> { title : String, content : Html msg }

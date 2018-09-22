@@ -1,19 +1,18 @@
 module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
                              , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder
                              , WorkflowSummary, searchWorkflows, workflowSummaryDecoder
-                             , Config, Flags, configDecoder, flagsDecoder
                              )
 
 import Http
 import Json.Decode as D
 import Json.Encode as E
 import Json.Decode.Pipeline exposing (required, optional, hardcoded)
+import Session exposing (Session)
+import Types exposing (Config)
 
 -- Executor
 
 -- [{"id":1,"host":"nbank-demo-1","pid":1197,"executorGroup":"nflow","started":"2018-08-16T18:14:38.170Z","active":"2018-09-16T18:52:44.857Z","expires":"2018-09-16T19:07:44.857Z"}]
-baseUrl = "http://bank.nflow.io/nflow/api/v1/"
-
 
 type alias Executor =
      { id: Int
@@ -54,10 +53,10 @@ executorListDecoder =
     D.list executorDecoder
 
 -- TODO config, baseUrl, read from session
-fetchExecutors: (Result Http.Error (List Executor) -> msg) -> Cmd msg
-fetchExecutors resultMsg =
+fetchExecutors: Config -> (Result Http.Error (List Executor) -> msg) -> Cmd msg
+fetchExecutors config resultMsg =
             Http.send resultMsg <|
-                        Http.get (baseUrl ++ "workflow-executor") executorListDecoder
+                        Http.get (config.baseUrl ++ "workflow-executor") executorListDecoder
 
 -- WorkflowDefinition
 
@@ -101,10 +100,10 @@ workflowDefListDecoder : D.Decoder (List WorkflowDef)
 workflowDefListDecoder =
     D.list workflowDefDecoder
 
-fetchWorkflowDefs: (Result Http.Error (List WorkflowDef) -> msg) -> Cmd msg
-fetchWorkflowDefs resultMsg =
+fetchWorkflowDefs: Config -> (Result Http.Error (List WorkflowDef) -> msg) -> Cmd msg
+fetchWorkflowDefs config resultMsg =
             Http.send resultMsg <|
-                        Http.get (baseUrl ++ "workflow-definition") workflowDefListDecoder
+                        Http.get (config.baseUrl ++ "workflow-definition") workflowDefListDecoder
 
 
 -- WorkflowSummary
@@ -151,28 +150,7 @@ workflowSummaryListDecoder =
 
 
 -- TODO query parameters
-searchWorkflows: (Result Http.Error (List WorkflowSummary) -> msg) -> Cmd msg
-searchWorkflows resultMsg =
+searchWorkflows: Config -> (Result Http.Error (List WorkflowSummary) -> msg) -> Cmd msg
+searchWorkflows config resultMsg =
             Http.send resultMsg <|
-                        Http.get (baseUrl ++ "workflow-instance") workflowSummaryListDecoder
-
-
--- Config (nflow-config.json)
-
-type alias Config =
-  { baseUrl: String
-  }
-
-type alias Flags =
-  { config: Config
-  }
-
-configDecoder: D.Decoder Config
-configDecoder =
-    D.succeed Config
-      |> required "baseUrl" D.string
-
-flagsDecoder: D.Decoder Flags
-flagsDecoder =
-    D.succeed Flags
-      |> required "config" configDecoder
+                        Http.get (config.baseUrl ++ "workflow-instance") workflowSummaryListDecoder

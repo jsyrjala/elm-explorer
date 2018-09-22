@@ -29,7 +29,7 @@ init session =
       , loading = True
       , executors = []
       , message = ""}
-    , fetchExecutors LoadResult
+    , fetchExecutors session.config LoadResult
     )
 
 toSession : Model -> Session
@@ -46,8 +46,12 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+
+      GotSession session ->
+         ( { model | session = session }, Cmd.none )
+
       Reload ->
-         (model, fetchExecutors LoadResult)
+         (model, fetchExecutors model.session.config LoadResult)
 
       LoadResult (Ok executors) ->
          ( { model | executors = executors

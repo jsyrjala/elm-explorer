@@ -29,7 +29,7 @@ init session =
       , loading = True
       , workflowDefs = []
       , message = ""}
-    , fetchWorkflowDefs LoadResult
+    , fetchWorkflowDefs session.config LoadResult
     )
 
 toSession : Model -> Session
@@ -43,6 +43,9 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+      GotSession session ->
+         ( { model | session = session }, Cmd.none )
+
       LoadResult (Ok workflowDefs) ->
          ( { model | workflowDefs = workflowDefs
                    , loading = False }, Cmd.none )

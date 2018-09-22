@@ -58,6 +58,8 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        GotSession session ->
+            ( { model | session = session }, Cmd.none )
         BusinessKeyChange value ->
             ( { model | businessKey = value }, Cmd.none )
         ExternalIdChange value ->
@@ -68,7 +70,8 @@ update msg model =
             ( { model | parentWorkflowId = value }, Cmd.none )
         Search ->
             ( { model
-                | loading = True }, searchWorkflows SearchResult)
+                | loading = True }
+              , searchWorkflows model.session.config SearchResult)
         SearchResult (Ok workflowSummaries) ->
             ( { model
                 | searchResults = workflowSummaries
@@ -76,7 +79,7 @@ update msg model =
         SearchResult (Err err) ->
             ( { model | loading = False }, Cmd.none )
 
-        _ -> (model, Cmd.none)
+        -- _ -> (model, Cmd.none)
 
 
 view : Model -> { title : String, content : Html Msg }

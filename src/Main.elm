@@ -23,12 +23,14 @@ import Page.ExecutorList
 
 import Json.Decode as Decode exposing (Value)
 import Session exposing (Session)
+import Types
 
 -- UPDATE
 
 type Model
     = Redirect Session
     | NotFound Session
+    | Error
     | Home Page.Home.Model
     | About Page.About.Model
     | ExecutorList Page.ExecutorList.Model
@@ -49,32 +51,35 @@ type Msg
     | GotDataMsg Page.Data.Msg
     | GotSearchMsg Page.Search.Msg
 
-toSession : Model -> Session
+toSession : Model -> Maybe Session
 toSession page =
     case page of
+        Error ->
+            Nothing
+
         Redirect session ->
-            session
+            Just session
 
         NotFound session ->
-            session
+            Just session
 
         Home subModel ->
-            Page.Home.toSession subModel
+            Just (Page.Home.toSession subModel)
 
         About subModel ->
-            Page.About.toSession subModel
+            Just (Page.About.toSession subModel)
 
         Data _ subModel ->
-            Page.Data.toSession subModel
+            Just (Page.Data.toSession subModel)
 
         ExecutorList subModel ->
-            Page.ExecutorList.toSession subModel
+            Just (Page.ExecutorList.toSession subModel)
 
         DefinitionList subModel ->
-            Page.DefinitionList.toSession subModel
+            Just (Page.DefinitionList.toSession subModel)
 
         Search subModel ->
-            Page.Search.toSession subModel
+            Just (Page.Search.toSession subModel)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -98,9 +103,17 @@ update msg model =
                             ( model, Cmd.none )
 
                         Just _ ->
-                            ( model
-                            , Nav.pushUrl (Session.navKey (toSession model)) (Url.toString url)
-                            )
+                            case (toSession model) of
+                                Just session ->
+                                    ( model
+                                    , Nav.pushUrl (Session.navKey session) (Url.toString url)
+                                    )
+                                Nothing ->
+                                    let
+                                        _ = Debug.log "ERROR" "No existing session! This is a bug!"
+                                    in
+                                    ( Error, Cmd.none )
+
 
                 Browser.External href ->
                     ( model
@@ -145,41 +158,49 @@ update msg model =
 init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
-        maybeFlags = Decode.decodeValue Api.NflowApi.flagsDecoder flags
+        maybeFlags = Decode.decodeValue Types.flagsDecoder flags
         _ = Debug.log "init" maybeFlags
     in
-    -- TODO pass config.json via flags, and store it to Session
-    changeRouteTo (Route.fromUrl url)
-            (Redirect (Session.fromViewer navKey))
+    case maybeFlags of
+        Ok flagsJson ->
+            changeRouteTo (Route.fromUrl url)
+                    (Redirect (Session.fromViewer flagsJson.config navKey))
+        Err err ->
+            let
+              _ = Debug.log "Malformed flags / config" err
+            in
+            ( Error, Cmd.none )
+
 
 changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute model =
-    let _ = log "changeRouteTo" maybeRoute
-        session = toSession model
-    in
-    case maybeRoute of
+    case toSession model of
         Nothing ->
-            ( NotFound session, Cmd.none )
-        Just Route.Root ->
-            ( model, Route.replaceUrl (Session.navKey session) Route.Home )
-        Just Route.Home ->
-            Page.Home.init session
-                |> updateWith Home GotHomeMsg model
-        Just Route.About ->
-            Page.About.init session
-                |> updateWith About GotAboutMsg model
-        Just Route.ExecutorList ->
-            Page.ExecutorList.init session
-                |> updateWith ExecutorList GotExecutorsMsg model
-        Just Route.DefinitionList ->
-            Page.DefinitionList.init session
-                |> updateWith DefinitionList GotDefinitionsMsg model
-        Just (Route.Data id) ->
-            Page.Data.init session id
-                |> updateWith (Data id) GotDataMsg model
-        Just Route.Search ->
-            Page.Search.init session
-                |> updateWith Search GotSearchMsg model
+            ( Error, Cmd.none )
+        Just session ->
+            case maybeRoute of
+                Nothing ->
+                    ( NotFound session, Cmd.none )
+                Just Route.Root ->
+                    ( model, Route.replaceUrl (Session.navKey session) Route.Home )
+                Just Route.Home ->
+                    Page.Home.init session
+                        |> updateWith Home GotHomeMsg model
+                Just Route.About ->
+                    Page.About.init session
+                        |> updateWith About GotAboutMsg model
+                Just Route.ExecutorList ->
+                    Page.ExecutorList.init session
+                        |> updateWith ExecutorList GotExecutorsMsg model
+                Just Route.DefinitionList ->
+                    Page.DefinitionList.init session
+                        |> updateWith DefinitionList GotDefinitionsMsg model
+                Just (Route.Data id) ->
+                    Page.Data.init session id
+                        |> updateWith (Data id) GotDataMsg model
+                Just Route.Search ->
+                    Page.Search.init session
+                        |> updateWith Search GotSearchMsg model
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
@@ -196,11 +217,18 @@ updateWith toModel toMsg model ( subModel, subCmd ) =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
+        Error ->
+            Sub.none
+
         NotFound _ ->
             Sub.none
 
         Redirect _ ->
-            Session.changes GotSession (Session.navKey (toSession model))
+            case toSession model of
+                Just session ->
+                  Session.changes GotSession (Session.navKey session)
+                Nothing ->
+                  Sub.none
 
         Data _ subModel ->
             Sub.map GotDataMsg (Page.Data.subscriptions subModel)
@@ -236,6 +264,15 @@ view model =
             }
     in
     case model of
+        Error ->
+            { title = "Error"
+            , body =
+               [ Html.div [] [
+                   Html.h1 [] [Html.text "Error"]
+                 ]
+               ]
+            }
+
         Redirect _ ->
             viewPage Page.Other (\_ -> Ignored) Page.Blank.view
 
@@ -260,10 +297,9 @@ view model =
         Search subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)
 
+
 main : Program Decode.Value Model Msg
 main =
-    let _ = log "start" "now"
-    in
     Browser.application
         { init = init
         , view = view

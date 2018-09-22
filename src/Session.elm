@@ -1,24 +1,22 @@
 module Session exposing (Session, fromViewer, navKey, changes)
 
 import Browser.Navigation as Nav
+import Types exposing (Config)
 
 
 
 -- TYPES
 
-
-type Session
-    = Guest Nav.Key
+type alias Session = {
+      config: Config,
+      navKey: Nav.Key
+    }
 
 -- INFO
 
 navKey : Session -> Nav.Key
 navKey session =
-    case session of
-
-        Guest key ->
-            key
-
+    session.navKey
 
 
 -- CHANGES
@@ -28,10 +26,10 @@ changes toMsg key =
     Sub.none
     -- Api.viewerChanges (\maybeViewer -> toMsg (fromViewer key maybeViewer)) Viewer.decoder
 
-fromViewer : Nav.Key -> Session
-fromViewer key  =
+fromViewer : Config -> Nav.Key -> Session
+fromViewer config key  =
     -- It's stored in localStorage as a JSON String;
     -- first decode the Value as a String, then
     -- decode that String as JSON.
-    Guest key
+    Session config key
 

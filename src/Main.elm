@@ -11,15 +11,14 @@ import Browser
 import Browser.Navigation as Nav
 import Page
 import Page.Blank
-import Page.ExecutorList
 import Page.DefinitionList
-import Page.NotFound
 import Page.Search
+import Page.InstanceDetails
+import Page.ExecutorList
+import Page.About
+import Page.NotFound
 import Route exposing (Route)
 import Url exposing (Url)
-import Page.About
-import Page.Data
-import Page.ExecutorList
 
 import Json.Decode as Decode exposing (Value)
 import Session exposing (Session)
@@ -34,7 +33,7 @@ type Model
     | DefinitionList Page.DefinitionList.Model
     | About Page.About.Model
     | ExecutorList Page.ExecutorList.Model
-    | Data Int Page.Data.Model
+    | InstanceDetails Int Page.InstanceDetails.Model
     | Search Page.Search.Model
 
 type Msg
@@ -46,7 +45,7 @@ type Msg
     | GotAboutMsg Page.About.Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDefinitionsMsg Page.DefinitionList.Msg
-    | GotDataMsg Page.Data.Msg
+    | GotInstanceDetailsMsg Page.InstanceDetails.Msg
     | GotSearchMsg Page.Search.Msg
 
 -- https://guide.elm-lang.org/interop/ports.html
@@ -71,8 +70,8 @@ toSession page =
         About subModel ->
             Just (Page.About.toSession subModel)
 
-        Data _ subModel ->
-            Just (Page.Data.toSession subModel)
+        InstanceDetails _ subModel ->
+            Just (Page.InstanceDetails.toSession subModel)
 
         ExecutorList subModel ->
             Just (Page.ExecutorList.toSession subModel)
@@ -150,9 +149,9 @@ update msg model =
             Page.About.update subMsg subModel
                 |> updateWith About GotAboutMsg model
 
-        ( GotDataMsg subMsg, Data id subModel ) ->
-            Page.Data.update subMsg subModel
-                |> updateWith (Data id) GotDataMsg model
+        ( GotInstanceDetailsMsg subMsg, InstanceDetails id subModel ) ->
+            Page.InstanceDetails.update subMsg subModel
+                |> updateWith (InstanceDetails id) GotInstanceDetailsMsg model
 
         ( GotExecutorsMsg subMsg, ExecutorList subModel ) ->
             Page.ExecutorList.update subMsg subModel
@@ -187,9 +186,9 @@ changeRouteTo maybeRoute model =
                 Just Route.ExecutorList ->
                     Page.ExecutorList.init session
                         |> updateWith ExecutorList GotExecutorsMsg model
-                Just (Route.Data id) ->
-                    Page.Data.init session id
-                        |> updateWith (Data id) GotDataMsg model
+                Just (Route.InstanceDetails id) ->
+                    Page.InstanceDetails.init session id
+                        |> updateWith (InstanceDetails id) GotInstanceDetailsMsg model
                 Just Route.Search ->
                     Page.Search.init session
                         |> updateWith Search GotSearchMsg model
@@ -222,8 +221,8 @@ subscriptions model =
                 Nothing ->
                   Sub.none
 
-        Data _ subModel ->
-            Sub.map GotDataMsg (Page.Data.subscriptions subModel)
+        InstanceDetails _ subModel ->
+            Sub.map GotInstanceDetailsMsg (Page.InstanceDetails.subscriptions subModel)
 
         DefinitionList subModel ->
             Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
@@ -274,8 +273,8 @@ view model =
         About subModel ->
             viewPage Page.About GotAboutMsg (Page.About.view subModel)
 
-        Data id subModel ->
-            viewPage Page.Data GotDataMsg (Page.Data.view { subModel | id = id } )
+        InstanceDetails id subModel ->
+            viewPage Page.Other GotInstanceDetailsMsg (Page.InstanceDetails.view { subModel | id = id } )
 
         ExecutorList subModel ->
             viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)

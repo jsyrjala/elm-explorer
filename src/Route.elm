@@ -17,7 +17,7 @@ import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, string)
 -}
 type Route
     = Root
-    | Data Int
+    | InstanceDetails Int
     | ExecutorList
     | DefinitionList
     | Search
@@ -31,10 +31,10 @@ parser : Parser (Route -> a) a
 parser =
     oneOf
         [ Parser.map DefinitionList Parser.top
-        , Parser.map Data (s "data" </> int)
-        , Parser.map About (s "about")
-        , Parser.map ExecutorList (s "executors")
         , Parser.map Search (s "search")
+        , Parser.map InstanceDetails (s "workflow" </> int)
+        , Parser.map ExecutorList (s "executors")
+        , Parser.map About (s "about")
         ]
 
 
@@ -86,8 +86,8 @@ routeToString page =
                 ExecutorList ->
                     [ "executors" ]
 
-                Data id ->
-                    [ "data", String.fromInt id]
+                InstanceDetails id ->
+                    [ "workflow", String.fromInt id]
 
                 Search ->
                     [ "search" ]

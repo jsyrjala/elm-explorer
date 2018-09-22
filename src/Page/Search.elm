@@ -132,8 +132,8 @@ searchResultsTable workflowSummaries =
 workflowSummaryRow: WorkflowSummary -> Html msg
 workflowSummaryRow workflow =
   tr []
-    [ td [] [linkTo (Route.Data workflow.id) [text (String.fromInt workflow.id)]]
-    , td [] [linkTo (Route.Data workflow.id) [text workflow.workflowType]]
+    [ td [] [linkTo (Route.InstanceDetails workflow.id) [text (String.fromInt workflow.id)]]
+    , td [] [linkTo (Route.InstanceDetails workflow.id) [text workflow.workflowType]]
     , td [] [text workflow.state]
     , td [] [text workflow.stateText]
     , td [] [text workflow.status]

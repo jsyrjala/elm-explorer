@@ -19,7 +19,6 @@ under Other.
 type Page
     = Other
     | DefinitionList
-    | Data
     | ExecutorList
     | About
     | Search
@@ -62,7 +61,6 @@ viewMenu page =
 
     [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
     , linkTo Route.Search [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
-    , linkTo (Route.Data 42) [ i [ class "ion-compose" ] [], text "\u{00A0}Data" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
@@ -87,9 +85,6 @@ isActive : Page -> Route -> Bool
 isActive page route =
     case ( page, route ) of
         ( DefinitionList, Route.DefinitionList ) ->
-            True
-
-        ( Data, Route.Data _) ->
             True
 
         ( ExecutorList, Route.ExecutorList ) ->

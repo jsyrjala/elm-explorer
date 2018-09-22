@@ -1,8 +1,9 @@
-module Main exposing (main)
+port module Main exposing (main)
 {-| Main functionality and the entry point of the app.
 
 -}
 
+import Json.Encode as E
 import Api.NflowApi
 import Debug exposing (log)
 import Html exposing (..)
@@ -48,6 +49,10 @@ type Msg
     | GotDataMsg Page.Data.Msg
     | GotSearchMsg Page.Search.Msg
 
+-- https://guide.elm-lang.org/interop/ports.html
+port graph : E.Value -> Cmd msg
+
+
 toSession : Model -> Maybe Session
 toSession page =
     case page of
@@ -74,6 +79,24 @@ toSession page =
 
         Search subModel ->
             Just (Page.Search.toSession subModel)
+
+
+init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url navKey =
+    let
+        maybeFlags = Decode.decodeValue Types.flagsDecoder flags
+        _ = Debug.log "init" maybeFlags
+    in
+    case maybeFlags of
+        Ok flagsJson ->
+            changeRouteTo (Route.fromUrl url)
+                    (Redirect (Session.fromViewer flagsJson.config navKey))
+        Err err ->
+            let
+              _ = Debug.log "Malformed flags / config" err
+            in
+            ( Error, Cmd.none )
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -143,23 +166,6 @@ update msg model =
         ( _, _ ) ->
             -- Disregard messages that arrived for the wrong page.
             ( model, Cmd.none )
-
-
-init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url navKey =
-    let
-        maybeFlags = Decode.decodeValue Types.flagsDecoder flags
-        _ = Debug.log "init" maybeFlags
-    in
-    case maybeFlags of
-        Ok flagsJson ->
-            changeRouteTo (Route.fromUrl url)
-                    (Redirect (Session.fromViewer flagsJson.config navKey))
-        Err err ->
-            let
-              _ = Debug.log "Malformed flags / config" err
-            in
-            ( Error, Cmd.none )
 
 
 changeRouteTo : Maybe Route -> Model -> ( Model, Cmd Msg )

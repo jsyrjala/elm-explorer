@@ -90,9 +90,6 @@ view model =
         -- TODO show load failed error
         [spinner]
       else
-         let
-           _ = Debug.log "xxx" model
-         in
         workflowDefsTable model.workflowDefs
     )
     }

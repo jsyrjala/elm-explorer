@@ -9,7 +9,7 @@ import Maybe exposing (andThen)
 import Route exposing (linkTo)
 import Session exposing (Session)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onClick)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Util exposing (formatTime, spinner, textElem)
 
 type alias Model =
@@ -84,12 +84,11 @@ update msg model =
 
 view : Model -> { title : String, content : Html Msg }
 view model =
-          let
-            _ = Debug.log "model" model
-          in
     { title = "Workflow instances"
     , content = div []
-      [ Html.form []
+      -- Search msg must be either in form onSubmit or searchButton onClick
+      -- but not both
+      [ Html.form [onSubmit Search]
         [ textField model.businessKey "Business Key" BusinessKeyChange
         , textField model.externalId "External id" ExternalIdChange
         , integerField model.workflowId "Workflow id" WorkflowIdChange
@@ -175,6 +174,5 @@ integerField fieldValue title changeMsg =
 searchButton : Model -> Html Msg
 searchButton model =
     div []
-    [ button [ onClick Search
-             ] [ text "Search"]
+    [ button [] [ text "Search"]
     ]

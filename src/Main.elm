@@ -85,7 +85,6 @@ init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
         maybeFlags = Decode.decodeValue Types.flagsDecoder flags
-        _ = Debug.log "init" maybeFlags
     in
     case maybeFlags of
         Ok flagsJson ->

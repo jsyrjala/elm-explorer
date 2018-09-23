@@ -8,7 +8,11 @@ import Json.Encode as E
 import Result
 import Http
 
-import Api.NflowApi as Api exposing (Config)
+import Api.NflowApi as Api
+import Types exposing (Config, Flags, flagsDecoder)
+
+
+config = Config "http://example.com"
 
 -- Executors
 
@@ -44,7 +48,7 @@ executorHttp =
       [ test "foo" <|
         \_ ->
            let
-              x = Api.fetchExecutors ExecutorsFetch
+              x = Api.fetchExecutors config ExecutorsFetch
            in
               -- TODO improve test
               Expect.equal 1 1
@@ -79,7 +83,7 @@ workflowDefHttp =
       [ test "foo" <|
         \_ ->
            let
-              x = Api.fetchWorkflowDefs WorkflowDefFetch
+               x = Api.fetchWorkflowDefs config WorkflowDefFetch
            in
               -- TODO improve test
               Expect.equal 1 1
@@ -125,6 +129,7 @@ workflowSummaryJson =
                              (Just 3)
                              "2018-09-20T07:26:05.961Z"
                              "2018-09-20T07:26:12.947Z"
+                             Nothing
 
                     parsed = D.decodeString Api.workflowSummaryDecoder jsonData
                 in
@@ -146,8 +151,33 @@ workflowSummaryJson =
                    "started":"2018-09-21T00:28:10.000Z",
                    "retries":9,
                    "created":"2018-09-20T07:26:05.392Z",
-                   "modified":"2018-09-20T15:56:15.539Z"}
+                   "modified":"2018-09-20T15:56:15.539Z",
+                   "stateVariables":{"requestData":{"clientId":"2","amount":2222}},
+                   "actions":[{"id":13,"type":"stateExecution","state":"rejected","stateText":"Stopped in final state","retryNo":0,"executionStartTime":"2018-09-18T13:28:08.159Z","executionEndTime":"2018-09-18T13:28:08.159Z","executorId":1},
+                              {"id":12,"type":"externalChange","state":"rejected","stateText":"API changed state to rejected. API changed nextActivationTime to 2018-09-18T13:26:36.944Z.","retryNo":2,"executionStartTime":"2018-09-18T13:28:07.364Z","executorId":2}
+                             ]
+
+                   }
                    """
+
+                   actions = [
+                     (Api.Action 13
+                                 "stateExecution"
+                                 "rejected"
+                                 "Stopped in final state"
+                                 0
+                                 "2018-09-18T13:28:08.159Z"
+                                 (Just "2018-09-18T13:28:08.159Z")
+                                 1),
+                     (Api.Action 12
+                                 "externalChange"
+                                 "rejected"
+                                 "API changed state to rejected. API changed nextActivationTime to 2018-09-18T13:26:36.944Z."
+                                 2
+                                 "2018-09-18T13:28:07.364Z"
+                                 Nothing
+                                 2)
+                     ]
                    workflowSummary = Api.WorkflowSummary
                             3
                             Nothing
@@ -163,6 +193,7 @@ workflowSummaryJson =
                             Nothing
                             "2018-09-20T07:26:05.392Z"
                             "2018-09-20T15:56:15.539Z"
+                            (Just actions)
 
                    parsed = D.decodeString Api.workflowSummaryDecoder jsonData
                in
@@ -185,7 +216,7 @@ workflowSummaryHttp =
       [ test "foo" <|
         \_ ->
            let
-              x = Api.searchWorkflows WorkflowSummaryFetch
+              x = Api.searchWorkflows config WorkflowSummaryFetch
            in
               -- TODO improve test
               Expect.equal 1 1
@@ -206,12 +237,10 @@ flagsJson =
                       }
                     }
                     """
-                    config = Config
-                              "http://example.com"
-                    flags = Api.Flags
+                    flags = Flags
                              config
 
-                    parsed = D.decodeString Api.flagsDecoder jsonData
+                    parsed = D.decodeString flagsDecoder jsonData
                 in
                 case parsed of
                     Result.Ok value -> Expect.equal flags value -- TODO implement better

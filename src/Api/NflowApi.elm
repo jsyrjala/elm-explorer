@@ -1,6 +1,7 @@
 module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
                              , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder
                              , WorkflowSummary, searchWorkflows, workflowSummaryDecoder
+                             , Action
                              )
 
 import Http
@@ -13,6 +14,10 @@ import Types exposing (Config)
 -- Executor
 
 -- [{"id":1,"host":"nbank-demo-1","pid":1197,"executorGroup":"nflow","started":"2018-08-16T18:14:38.170Z","active":"2018-09-16T18:52:44.857Z","expires":"2018-09-16T19:07:44.857Z"}]
+
+-- TODO implement better
+timestamp: D.Decoder String
+timestamp = D.string
 
 type alias Executor =
      { id: Int
@@ -44,9 +49,9 @@ executorDecoder =
       |> required "host" D.string
       |> required "pid" D.int
       |> required "executorGroup" D.string
-      |> required "started" D.string
-      |> required "active" D.string
-      |> required "expires" D.string
+      |> required "started" timestamp
+      |> required "active" timestamp
+      |> required "expires" timestamp
 
 executorListDecoder : D.Decoder (List Executor)
 executorListDecoder =
@@ -107,6 +112,7 @@ fetchWorkflowDefs config resultMsg =
 
 
 -- WorkflowSummary
+-- TODO rename to WorkflowInstance
 
 type alias WorkflowSummary =
     { id: Int
@@ -123,7 +129,32 @@ type alias WorkflowSummary =
     , parentWorkflowId: Maybe Int
     , created: String -- TODO timestamp
     , modified: String -- TODO timestamp
+    , actions: Maybe ( List Action )
+    -- , stateVariables: Maybe String
     }
+
+type alias Action =
+    { id: Int
+    , actionType: String
+    , state: String
+    , stateText: String
+    , retryNo: Int
+    , executionStartTime: String -- TODO timestamp
+    , executionEndTime: Maybe String -- TODO timestmap
+    , executorId: Int
+    }
+
+actionDecoder: D.Decoder Action
+actionDecoder =
+    D.succeed Action
+      |> required "id" D.int
+      |> required "type" D.string
+      |> required "state" D.string
+      |> required "stateText" D.string
+      |> required "retryNo" D.int
+      |> required "executionStartTime" timestamp
+      |> optional "executionEndTime" (D.nullable timestamp) Nothing
+      |> required "executorId" D.int
 
 
 workflowSummaryDecoder: D.Decoder WorkflowSummary
@@ -137,12 +168,14 @@ workflowSummaryDecoder =
       |> required "status" D.string
       |> required "type" D.string
       |> required "retries" D.int
-      |> optional "nextActivation" (D.nullable D.string) Nothing
-      |> optional "started" (D.nullable D.string) Nothing
+      |> optional "nextActivation" (D.nullable timestamp) Nothing
+      |> optional "started" (D.nullable timestamp) Nothing
       |> optional "parentActionId" (D.nullable D.int) Nothing
       |> optional "parentWorkflowId" (D.nullable D.int) Nothing
-      |> required "created" D.string
-      |> required "modified" D.string
+      |> required "created" timestamp
+      |> required "modified" timestamp
+      |> optional "actions" (D.nullable (D.list actionDecoder)) Nothing
+      -- |> optional "stateVariables" (D.nullable D.string) Nothing
 
 workflowSummaryListDecoder : D.Decoder (List WorkflowSummary)
 workflowSummaryListDecoder =
@@ -154,3 +187,13 @@ searchWorkflows: Config -> (Result Http.Error (List WorkflowSummary) -> msg) -> 
 searchWorkflows config resultMsg =
             Http.send resultMsg <|
                         Http.get (config.baseUrl ++ "workflow-instance") workflowSummaryListDecoder
+
+
+-- http://bank.nflow.io/nflow/api/v1/workflow-instance/id/2?include=actions,currentStateVariables,actionStateVariables
+getWorkflowDetails: Config -> Int -> (Result Http.Error WorkflowSummary -> msg) -> Cmd msg
+getWorkflowDetails config id resultMsg =
+            Http.send resultMsg <|
+                        Http.get (config.baseUrl ++
+                                  "workflow-instance/id/" ++
+                                  (String.fromInt id) ++
+                                  "?include=actions,currentStateVariables,actionStateVariables")  workflowSummaryDecoder

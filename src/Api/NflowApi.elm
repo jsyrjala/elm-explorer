@@ -1,6 +1,7 @@
 module Api.NflowApi exposing ( Executor, executorDecoder, executorEncoder, fetchExecutors
                              , WorkflowDef, fetchWorkflowDefs, workflowDefDecoder
-                             , WorkflowSummary, searchWorkflows, workflowSummaryDecoder
+                             , WorkflowSummary, searchWorkflows, getWorkflowDetails
+                             , workflowSummaryDecoder
                              , Action
                              )
 

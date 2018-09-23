@@ -11,6 +11,7 @@ import Browser
 import Browser.Navigation as Nav
 import Page
 import Page.Blank
+import Page.DefinitionDetails
 import Page.DefinitionList
 import Page.Search
 import Page.InstanceDetails
@@ -34,6 +35,7 @@ type Model
     | About Page.About.Model
     | ExecutorList Page.ExecutorList.Model
     | InstanceDetails Int Page.InstanceDetails.Model
+    | DefinitionDetails String Page.DefinitionDetails.Model
     | Search Page.Search.Model
 
 type Msg
@@ -46,6 +48,7 @@ type Msg
     | GotExecutorsMsg Page.ExecutorList.Msg
     | GotDefinitionsMsg Page.DefinitionList.Msg
     | GotInstanceDetailsMsg Page.InstanceDetails.Msg
+    | GotDefinitionDetailsMsg Page.DefinitionDetails.Msg
     | GotSearchMsg Page.Search.Msg
 
 -- https://guide.elm-lang.org/interop/ports.html
@@ -75,6 +78,9 @@ toSession page =
 
         ExecutorList subModel ->
             Just (Page.ExecutorList.toSession subModel)
+
+        DefinitionDetails _ subModel ->
+            Just (Page.DefinitionDetails.toSession subModel)
 
         Search subModel ->
             Just (Page.Search.toSession subModel)
@@ -189,6 +195,9 @@ changeRouteTo maybeRoute model =
                 Just (Route.InstanceDetails id) ->
                     Page.InstanceDetails.init session id
                         |> updateWith (InstanceDetails id) GotInstanceDetailsMsg model
+                Just (Route.DefinitionDetails id) ->
+                    Page.DefinitionDetails.init session id
+                        |> updateWith (DefinitionDetails id) GotDefinitionDetailsMsg model
                 Just Route.Search ->
                     Page.Search.init session
                         |> updateWith Search GotSearchMsg model
@@ -226,6 +235,9 @@ subscriptions model =
 
         DefinitionList subModel ->
             Sub.map GotDefinitionsMsg (Page.DefinitionList.subscriptions subModel)
+
+        DefinitionDetails _ subModel ->
+            Sub.map GotDefinitionDetailsMsg (Page.DefinitionDetails.subscriptions subModel)
 
         About subModel ->
             Sub.map GotAboutMsg (Page.About.subscriptions subModel)
@@ -278,6 +290,9 @@ view model =
 
         ExecutorList subModel ->
             viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)
+
+        DefinitionDetails id subModel ->
+            viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view { subModel | id = id } )
 
         Search subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)

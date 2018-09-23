@@ -5,6 +5,7 @@ Executors list
 -}
 import Api.NflowApi exposing (WorkflowDef, fetchWorkflowDefs)
 import Html exposing (Html, table, th, tr, td, tbody, thead, text, div)
+import Route exposing (linkTo)
 import Session exposing (Session)
 import Http
 import Html.Attributes exposing (attribute, class, classList, href, id, placeholder, src)
@@ -60,7 +61,7 @@ update msg model =
 workflowDefRow: WorkflowDef -> Html msg
 workflowDefRow workflowDef =
   tr []
-    [ (td [] [text workflowDef.definitionType] )
+    [ (td [] [linkTo (Route.DefinitionDetails workflowDef.definitionType) [text workflowDef.definitionType]] )
     , (td []
          (case workflowDef.description of
            Just x ->

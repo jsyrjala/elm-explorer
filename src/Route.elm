@@ -18,6 +18,7 @@ import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, string)
 type Route
     = Root
     | InstanceDetails Int
+    | DefinitionDetails String
     | ExecutorList
     | DefinitionList
     | Search
@@ -33,6 +34,7 @@ parser =
         [ Parser.map DefinitionList Parser.top
         , Parser.map Search (s "search")
         , Parser.map InstanceDetails (s "workflow" </> int)
+        , Parser.map DefinitionDetails (s "workflow-definition" </> string)
         , Parser.map ExecutorList (s "executors")
         , Parser.map About (s "about")
         ]
@@ -88,6 +90,9 @@ routeToString page =
 
                 InstanceDetails id ->
                     [ "workflow", String.fromInt id]
+
+                DefinitionDetails workflowType  ->
+                    [ "workflow-definition", workflowType ]
 
                 Search ->
                     [ "search" ]

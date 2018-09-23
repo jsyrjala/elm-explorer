@@ -76,7 +76,7 @@ dataTable: WorkflowSummary -> Html msg
 dataTable workflow =
     div []
     [ h2 [] [ text workflow.workflowType ]
-    , linkTo Route.DefinitionList [text "Go to workflow definition"]
+    , linkTo (Route.DefinitionDetails workflow.workflowType) [text "Go to workflow definition"]
     , text "Parent workflow:"
     , text "Created:", text workflow.created
     , text "Started:", textElem workflow.started

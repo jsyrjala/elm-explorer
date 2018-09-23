@@ -18,7 +18,7 @@ import Page.InstanceDetails
 import Page.ExecutorList
 import Page.About
 import Page.NotFound
-import Route exposing (Route)
+import Route exposing (Route, SearchQueryParams)
 import Url exposing (Url)
 
 import Json.Decode as Decode exposing (Value)
@@ -36,7 +36,7 @@ type Model
     | ExecutorList Page.ExecutorList.Model
     | InstanceDetails Int Page.InstanceDetails.Model
     | DefinitionDetails String Page.DefinitionDetails.Model
-    | Search Page.Search.Model
+    | Search SearchQueryParams Page.Search.Model
 
 type Msg
     = Ignored
@@ -82,7 +82,7 @@ toSession page =
         DefinitionDetails _ subModel ->
             Just (Page.DefinitionDetails.toSession subModel)
 
-        Search subModel ->
+        Search _ subModel ->
             Just (Page.Search.toSession subModel)
 
 
@@ -163,9 +163,9 @@ update msg model =
             Page.ExecutorList.update subMsg subModel
                 |> updateWith ExecutorList GotExecutorsMsg model
 
-        ( GotSearchMsg subMsg, Search subModel ) ->
+        ( GotSearchMsg subMsg, Search queryParams subModel ) ->
             Page.Search.update subMsg subModel
-                |> updateWith Search GotSearchMsg model
+                |> updateWith (Search queryParams) GotSearchMsg model
 
         ( _, _ ) ->
             -- Disregard messages that arrived for the wrong page.
@@ -198,9 +198,9 @@ changeRouteTo maybeRoute model =
                 Just (Route.DefinitionDetails id) ->
                     Page.DefinitionDetails.init session id
                         |> updateWith (DefinitionDetails id) GotDefinitionDetailsMsg model
-                Just Route.Search ->
-                    Page.Search.init session
-                        |> updateWith Search GotSearchMsg model
+                Just (Route.Search queryParams)->
+                    Page.Search.init session queryParams
+                        |> updateWith (Search queryParams) GotSearchMsg model
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
@@ -245,7 +245,7 @@ subscriptions model =
         ExecutorList subModel ->
             Sub.map GotExecutorsMsg (Page.ExecutorList.subscriptions subModel)
 
-        Search subModel ->
+        Search _ subModel ->
             Sub.map GotSearchMsg (Page.Search.subscriptions subModel)
 
 -- VIEW
@@ -294,7 +294,7 @@ view model =
         DefinitionDetails id subModel ->
             viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view { subModel | id = id } )
 
-        Search subModel ->
+        Search queryParams subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)
 
 

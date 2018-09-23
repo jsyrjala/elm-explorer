@@ -6,7 +6,7 @@ import Browser exposing (Document)
 import Html exposing (Html, a, button, div, footer, i, img, li, nav, p, span, text, ul)
 import Html.Attributes exposing (class, classList, href, style)
 import Html.Events exposing (onClick)
-import Route exposing (Route)
+import Route exposing (Route, SearchQueryParams)
 import Session exposing (Session)
 
 {-| Determines which navbar link (if any) will be rendered as active.
@@ -60,7 +60,7 @@ viewMenu page =
     in
 
     [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
-    , linkTo Route.Search [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
+    , linkTo (Route.Search (SearchQueryParams Nothing Nothing Nothing)) [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
@@ -90,7 +90,7 @@ isActive page route =
         ( ExecutorList, Route.ExecutorList ) ->
             True
 
-        ( Search, Route.Search ) ->
+        ( Search, (Route.Search _) ) ->
             True
 
         ( About, Route.About ) ->

@@ -6,7 +6,7 @@ import Http
 import Api.NflowApi exposing (WorkflowSummary, searchWorkflows)
 import Html exposing (Attribute, Html, button, div, input, table, tbody, td, text, th, thead, tr)
 import Maybe exposing (andThen)
-import Route exposing (linkTo)
+import Route exposing (SearchQueryParams, linkTo)
 import Session exposing (Session)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
@@ -23,11 +23,11 @@ type alias Model =
     }
 
 
-init : Session -> ( Model, Cmd Msg )
-init session =
+init : Session -> SearchQueryParams -> ( Model, Cmd Msg )
+init session queryParams =
     ( { session = session
-      , businessKey = ""
-      , externalId = ""
+      , businessKey = Maybe.withDefault "" queryParams.businessKey
+      , externalId = Maybe.withDefault "" queryParams.externalId
       , workflowId = Nothing
       , parentWorkflowId = Nothing
       , searchResults = []

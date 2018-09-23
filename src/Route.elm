@@ -1,4 +1,5 @@
-module Route exposing (Route(..), fromUrl, href, replaceUrl, linkTo)
+module Route exposing (Route(..), fromUrl, href, replaceUrl, linkTo,
+                       SearchQueryParams)
 {-| Route implements URL based routing.
 
 -}
@@ -6,7 +7,9 @@ import Browser.Navigation as Nav
 import Html exposing (Attribute, Html, a)
 import Html.Attributes as Attr
 import Url exposing (Url)
-import Url.Parser as Parser exposing ((</>), Parser, int, oneOf, s, string)
+import Url.Parser as Parser exposing ((</>), (<?>), Parser, int, oneOf, s, string)
+import Dict
+import Url.Parser.Query
 
 
 -- ROUTING
@@ -21,9 +24,18 @@ type Route
     | DefinitionDetails String
     | ExecutorList
     | DefinitionList
-    | Search
+    | Search SearchQueryParams
     | About
 
+type alias SearchQueryParams =
+  { workflowType : Maybe String
+  , businessKey : Maybe String
+  , externalId : Maybe String
+  }
+
+searchParams : Url.Parser.Query.Parser SearchQueryParams
+searchParams =
+  Url.Parser.Query.map3 SearchQueryParams (Url.Parser.Query.string "type") (Url.Parser.Query.string "businessKey") (Url.Parser.Query.string "externalId")
 
 {-| parser parses the URL to a `Route` instance.
 
@@ -32,7 +44,7 @@ parser : Parser (Route -> a) a
 parser =
     oneOf
         [ Parser.map DefinitionList Parser.top
-        , Parser.map Search (s "search")
+        , Parser.map Search (s "search" <?> searchParams)
         , Parser.map InstanceDetails (s "workflow" </> int)
         , Parser.map DefinitionDetails (s "workflow-definition" </> string)
         , Parser.map ExecutorList (s "executors")
@@ -57,7 +69,8 @@ replaceUrl key route =
 
 fromUrl : Url -> Maybe Route
 fromUrl url =
-    -- The RealWorld spec treats the fragment like a path.
+    -- TODO convert also #foo?foo=123 to query params
+    -- Convert # fragment to path
     -- This makes it *literally* the path, so we can proceed
     -- with parsing as if it had been a normal path all along.
     { url | path = Maybe.withDefault url.path url.fragment, fragment = Nothing }
@@ -94,7 +107,7 @@ routeToString page =
                 DefinitionDetails workflowType  ->
                     [ "workflow-definition", workflowType ]
 
-                Search ->
+                Search _ ->
                     [ "search" ]
 
     in

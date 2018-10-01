@@ -42,7 +42,7 @@ update msg model =
 
 view : Model -> { title : String, content : Html msg }
 view model =
-    { title = ""
+    { title = "About"
     , content = Html.text "About"
     }
 

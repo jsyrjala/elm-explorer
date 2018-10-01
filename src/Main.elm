@@ -286,13 +286,13 @@ view model =
             viewPage Page.About GotAboutMsg (Page.About.view subModel)
 
         InstanceDetails id subModel ->
-            viewPage Page.Other GotInstanceDetailsMsg (Page.InstanceDetails.view { subModel | id = id } )
+            viewPage Page.Other GotInstanceDetailsMsg (Page.InstanceDetails.view subModel )
 
         ExecutorList subModel ->
             viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)
 
         DefinitionDetails id subModel ->
-            viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view { subModel | id = id } )
+            viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view subModel )
 
         Search queryParams subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)

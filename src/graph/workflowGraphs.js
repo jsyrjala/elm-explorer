@@ -253,7 +253,6 @@ export const drawWorkflowDefinition = (graph, canvasSelector, nodeSelectedCallBa
     svgRoot.call(zoom)
     const aspectRatio = graph.graph().height / graph.graph().width
 
-    console.log(aspectRatio, graph.graph().height)
     const availableWidth = parseInt(svgRoot.style('width').replace(/px/, ''))
     svgRoot.attr('height', Math.max(Math.min(availableWidth * aspectRatio, graph.graph().width * aspectRatio) + 60, 300))
     const zoomScale = Math.min(availableWidth / (graph.graph().width + 70), 1)

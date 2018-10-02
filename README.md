@@ -1,5 +1,15 @@
 ## Setup
 
+MacOS
+```
+brew install elm
+```
+
+Linux ?
+```
+apt-get install elm
+```
+
 ```
 npm i -g elm-format
 npm i -g create-elm-app

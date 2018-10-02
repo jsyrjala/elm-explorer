@@ -19,4 +19,4 @@ formatTime time =
 
 
 spinner =
-    text "loading"
+    text "loading..."

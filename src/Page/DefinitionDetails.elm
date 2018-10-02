@@ -1,32 +1,38 @@
-module Page.DefinitionDetails exposing (Msg, Model, view, init, update, toSession, subscriptions)
+module Page.DefinitionDetails exposing (Model, Msg, init, subscriptions, toSession, update, view)
 
 {-| Workflow definition details
 -}
+
 import Api.NflowApi exposing (Action)
 import Html exposing (..)
 import Html.Attributes exposing (class, href)
+import Http
 import Route exposing (linkTo)
 import Session exposing (Session)
-import Http
 import Util exposing (textElem)
 
+
 type alias Model =
-    { session: Session
-    , id: String
-    , loading: Bool
+    { session : Session
+    , id : String
+    , loading : Bool
     }
 
+
 type Msg
-  = GotSession Session
-  | Dummy
+    = GotSession Session
+    | Dummy
+
 
 toSession : Model -> Session
 toSession model =
     model.session
 
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Session.changes GotSession (Session.navKey model.session)
+
 
 init : Session -> String -> ( Model, Cmd Msg )
 init session id =
@@ -41,9 +47,11 @@ init session id =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-      GotSession session ->
-         ( { model | session = session }, Cmd.none )
-      _ -> (model, Cmd.none)
+        GotSession session ->
+            ( { model | session = session }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> { title : String, content : Html msg }

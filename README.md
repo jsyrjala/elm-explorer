@@ -1,3 +1,10 @@
+## Setup
+
+```
+npm i -g elm-format
+npm i -g create-elm-app
+```
+
 ## Development
 
 Start development server

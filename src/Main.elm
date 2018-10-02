@@ -1,31 +1,33 @@
 module Main exposing (main)
-{-| Main functionality and the entry point of the app.
 
+{-| Main functionality and the entry point of the app.
 -}
 
-import Json.Encode as E
 import Api.NflowApi
-import Debug exposing (log)
-import Html exposing (..)
 import Browser
 import Browser.Navigation as Nav
+import Debug exposing (log)
+import Html exposing (..)
+import Json.Decode as Decode exposing (Value)
+import Json.Encode as E
 import Page
+import Page.About
 import Page.Blank
 import Page.DefinitionDetails
 import Page.DefinitionList
-import Page.Search
-import Page.InstanceDetails
 import Page.ExecutorList
-import Page.About
+import Page.InstanceDetails
 import Page.NotFound
+import Page.Search
 import Route exposing (Route, SearchQueryParams)
-import Url exposing (Url)
-
-import Json.Decode as Decode exposing (Value)
 import Session exposing (Session)
 import Types
+import Url exposing (Url)
+
+
 
 -- UPDATE
+
 
 type Model
     = Redirect Session
@@ -37,6 +39,7 @@ type Model
     | InstanceDetails Int Page.InstanceDetails.Model
     | DefinitionDetails String Page.DefinitionDetails.Model
     | Search SearchQueryParams Page.Search.Model
+
 
 type Msg
     = Ignored
@@ -50,7 +53,6 @@ type Msg
     | GotInstanceDetailsMsg Page.InstanceDetails.Msg
     | GotDefinitionDetailsMsg Page.DefinitionDetails.Msg
     | GotSearchMsg Page.Search.Msg
-
 
 
 toSession : Model -> Maybe Session
@@ -87,15 +89,18 @@ toSession page =
 init : Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
     let
-        maybeFlags = Decode.decodeValue Types.flagsDecoder flags
+        maybeFlags =
+            Decode.decodeValue Types.flagsDecoder flags
     in
     case maybeFlags of
         Ok flagsJson ->
             changeRouteTo (Route.fromUrl url)
-                    (Redirect (Session.fromViewer flagsJson.config navKey))
+                (Redirect (Session.fromViewer flagsJson.config navKey))
+
         Err err ->
             let
-              _ = Debug.log "Malformed flags / config" err
+                _ =
+                    Debug.log "Malformed flags / config" err
             in
             ( Error, Cmd.none )
 
@@ -122,17 +127,18 @@ update msg model =
                             ( model, Cmd.none )
 
                         Just _ ->
-                            case (toSession model) of
+                            case toSession model of
                                 Just session ->
                                     ( model
                                     , Nav.pushUrl (Session.navKey session) (Url.toString url)
                                     )
+
                                 Nothing ->
                                     let
-                                        _ = Debug.log "ERROR" "No existing session! This is a bug!"
+                                        _ =
+                                            Debug.log "ERROR" "No existing session! This is a bug!"
                                     in
                                     ( Error, Cmd.none )
-
 
                 Browser.External href ->
                     ( model
@@ -175,39 +181,51 @@ changeRouteTo maybeRoute model =
     case toSession model of
         Nothing ->
             ( Error, Cmd.none )
+
         Just session ->
             case maybeRoute of
                 Nothing ->
                     ( NotFound session, Cmd.none )
+
                 Just Route.Root ->
                     ( model, Route.replaceUrl (Session.navKey session) Route.DefinitionList )
+
                 Just Route.DefinitionList ->
                     Page.DefinitionList.init session
                         |> updateWith DefinitionList GotDefinitionsMsg model
+
                 Just Route.About ->
                     Page.About.init session
                         |> updateWith About GotAboutMsg model
+
                 Just Route.ExecutorList ->
                     Page.ExecutorList.init session
                         |> updateWith ExecutorList GotExecutorsMsg model
+
                 Just (Route.InstanceDetails id) ->
                     Page.InstanceDetails.init session id
                         |> updateWith (InstanceDetails id) GotInstanceDetailsMsg model
+
                 Just (Route.DefinitionDetails id) ->
                     Page.DefinitionDetails.init session id
                         |> updateWith (DefinitionDetails id) GotDefinitionDetailsMsg model
-                Just (Route.Search queryParams)->
+
+                Just (Route.Search queryParams) ->
                     Page.Search.init session queryParams
                         |> updateWith (Search queryParams) GotSearchMsg model
 
 
 updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
 updateWith toModel toMsg model ( subModel, subCmd ) =
-    let _ = log "update with"
+    let
+        _ =
+            log "update with"
     in
     ( toModel subModel
     , Cmd.map toMsg subCmd
     )
+
+
 
 -- SUBSCRIPTIONS
 
@@ -224,9 +242,10 @@ subscriptions model =
         Redirect _ ->
             case toSession model of
                 Just session ->
-                  Session.changes GotSession (Session.navKey session)
+                    Session.changes GotSession (Session.navKey session)
+
                 Nothing ->
-                  Sub.none
+                    Sub.none
 
         InstanceDetails _ subModel ->
             Sub.map GotInstanceDetailsMsg (Page.InstanceDetails.subscriptions subModel)
@@ -245,6 +264,8 @@ subscriptions model =
 
         Search _ subModel ->
             Sub.map GotSearchMsg (Page.Search.subscriptions subModel)
+
+
 
 -- VIEW
 
@@ -265,10 +286,10 @@ view model =
         Error ->
             { title = "Error"
             , body =
-               [ Html.div [] [
-                   Html.h1 [] [Html.text "Error"]
-                 ]
-               ]
+                [ Html.div []
+                    [ Html.h1 [] [ Html.text "Error" ]
+                    ]
+                ]
             }
 
         Redirect _ ->
@@ -284,13 +305,13 @@ view model =
             viewPage Page.About GotAboutMsg (Page.About.view subModel)
 
         InstanceDetails id subModel ->
-            viewPage Page.Other GotInstanceDetailsMsg (Page.InstanceDetails.view subModel )
+            viewPage Page.Other GotInstanceDetailsMsg (Page.InstanceDetails.view subModel)
 
         ExecutorList subModel ->
             viewPage Page.ExecutorList GotExecutorsMsg (Page.ExecutorList.view subModel)
 
         DefinitionDetails id subModel ->
-            viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view subModel )
+            viewPage Page.Other GotDefinitionDetailsMsg (Page.DefinitionDetails.view subModel)
 
         Search queryParams subModel ->
             viewPage Page.Search GotSearchMsg (Page.Search.view subModel)

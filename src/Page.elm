@@ -1,13 +1,15 @@
 module Page exposing (Page(..), view, viewErrors)
-{-| Generic functionality for Pages
 
+{-| Generic functionality for Pages
 -}
+
 import Browser exposing (Document)
 import Html exposing (Html, a, button, div, footer, i, img, li, nav, p, span, text, ul)
 import Html.Attributes exposing (class, classList, href, style)
 import Html.Events exposing (onClick)
 import Route exposing (Route, SearchQueryParams)
 import Session exposing (Session)
+
 
 {-| Determines which navbar link (if any) will be rendered as active.
 
@@ -41,7 +43,7 @@ view page { title, content } =
 
 
 viewHeader : Page -> Html msg
-viewHeader page  =
+viewHeader page =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
             [ a [ class "navbar-brand", Route.href Route.DefinitionList ]
@@ -58,13 +60,11 @@ viewMenu page =
         linkTo =
             navbarLink page
     in
-
     [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
     , linkTo (Route.Search (SearchQueryParams Nothing Nothing Nothing)) [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]
     , linkTo Route.ExecutorList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Executors" ]
     , linkTo Route.About [ i [ class "ion-gear-a" ] [], text "\u{00A0}About" ]
     ]
-
 
 
 viewFooter : Html msg
@@ -90,7 +90,7 @@ isActive page route =
         ( ExecutorList, Route.ExecutorList ) ->
             True
 
-        ( Search, (Route.Search _) ) ->
+        ( Search, Route.Search _ ) ->
             True
 
         ( About, Route.About ) ->

@@ -5,12 +5,13 @@ module Asset exposing (Image, error, loading, src)
 We should never expose asset URLs directly; this module should be in charge of
 all of them. One source of truth!
 
-
 Asset.src AssetImage.error
+
 -}
 
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attr
+
 
 type Image
     = Image String

@@ -1,17 +1,22 @@
-module Util exposing (textElem, formatTime, spinner)
+module Util exposing (formatTime, spinner, textElem)
 
 import Html exposing (Html, text)
+
 
 textElem : Maybe String -> Html msg
 textElem value =
     case value of
-       Just x -> text x
-       Nothing -> text ""
+        Just x ->
+            text x
+
+        Nothing ->
+            text ""
 
 
-formatTime: String -> String
+formatTime : String -> String
 formatTime time =
     time
+
 
 spinner =
     text "loading"

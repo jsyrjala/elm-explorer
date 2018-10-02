@@ -1,22 +1,29 @@
-module Route exposing (Route(..), fromUrl, href, replaceUrl, linkTo,
-                       SearchQueryParams)
-{-| Route implements URL based routing.
+module Route exposing
+    ( Route(..)
+    , SearchQueryParams
+    , fromUrl
+    , href
+    , linkTo
+    , replaceUrl
+    )
 
+{-| Route implements URL based routing.
 -}
+
 import Browser.Navigation as Nav
+import Dict
 import Html exposing (Attribute, Html, a)
 import Html.Attributes as Attr
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), (<?>), Parser, int, oneOf, s, string)
-import Dict
 import Url.Parser.Query
+
 
 
 -- ROUTING
 
 
 {-| Route is a location of a page
-
 -}
 type Route
     = Root
@@ -27,18 +34,20 @@ type Route
     | Search SearchQueryParams
     | About
 
+
 type alias SearchQueryParams =
-  { workflowType : Maybe String
-  , businessKey : Maybe String
-  , externalId : Maybe String
-  }
+    { workflowType : Maybe String
+    , businessKey : Maybe String
+    , externalId : Maybe String
+    }
+
 
 searchParams : Url.Parser.Query.Parser SearchQueryParams
 searchParams =
-  Url.Parser.Query.map3 SearchQueryParams (Url.Parser.Query.string "type") (Url.Parser.Query.string "businessKey") (Url.Parser.Query.string "externalId")
+    Url.Parser.Query.map3 SearchQueryParams (Url.Parser.Query.string "type") (Url.Parser.Query.string "businessKey") (Url.Parser.Query.string "externalId")
+
 
 {-| parser parses the URL to a `Route` instance.
-
 -}
 parser : Parser (Route -> a) a
 parser =
@@ -54,6 +63,7 @@ parser =
 
 
 -- PUBLIC HELPERS
+
 
 {-| href converts Route to textual Path.
 -}
@@ -76,11 +86,15 @@ fromUrl url =
     { url | path = Maybe.withDefault url.path url.fragment, fragment = Nothing }
         |> Parser.parse parser
 
-linkTo: Route -> (List (Html msg)) -> Html msg
+
+linkTo : Route -> List (Html msg) -> Html msg
 linkTo route linkContent =
-  a [ href route ] linkContent
+    a [ href route ] linkContent
+
+
 
 -- INTERNAL
+
 
 {-| routeToString converts route to a string.
 -}
@@ -102,13 +116,12 @@ routeToString page =
                     [ "executors" ]
 
                 InstanceDetails id ->
-                    [ "workflow", String.fromInt id]
+                    [ "workflow", String.fromInt id ]
 
-                DefinitionDetails workflowType  ->
+                DefinitionDetails workflowType ->
                     [ "workflow-definition", workflowType ]
 
                 Search _ ->
                     [ "search" ]
-
     in
     "#/" ++ String.join "/" pieces

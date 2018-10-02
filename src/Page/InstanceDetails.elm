@@ -1,25 +1,33 @@
-module Page.InstanceDetails exposing (view, Msg, Model, init, update, toSession, subscriptions)
+port module Page.InstanceDetails exposing (view, Msg, Model, init, update, toSession, subscriptions)
 {-| Workflow instance details
 -}
 import Api.NflowApi exposing (Action, WorkflowSummary, getWorkflowDetails)
-import Html exposing (..)
-import Html.Attributes exposing (class, href)
+import Html exposing (text, div, Html, h2, table, tr, td, th, tbody, thead)
+import Html.Attributes exposing (class, href, id, style)
 import Route exposing (linkTo)
 import Session exposing (Session)
 import Http
+import Json.Encode as E
 import Util exposing (textElem)
+import Svg
+import Svg.Attributes as SvgA
+
+-- https://guide.elm-lang.org/interop/ports.html
+port instanceStateSelectedIn : (Maybe String -> msg) -> Sub msg
+port drawInstanceGraph : E.Value -> Cmd msg
 
 type alias Model =
     { session: Session
     , id: Int
     , loading: Bool
     , workflow: Maybe WorkflowSummary
+    , selectedState: Maybe String
     }
 
 type Msg
   = GotSession Session
   | LoadResult (Result Http.Error WorkflowSummary)
-  | Dummy
+  | StateSelected (Maybe String)
 
 toSession : Model -> Session
 toSession model =
@@ -27,7 +35,10 @@ toSession model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Session.changes GotSession (Session.navKey model.session)
+    Sub.batch
+    [ instanceStateSelectedIn StateSelected
+    , Session.changes GotSession (Session.navKey model.session)
+    ]
 
 init : Session -> Int -> ( Model, Cmd Msg )
 init session id =
@@ -35,6 +46,7 @@ init session id =
       , id = id
       , loading = True
       , workflow = Nothing
+      , selectedState = Nothing
       }
     , getWorkflowDetails session.config id LoadResult
     )
@@ -47,23 +59,28 @@ update msg model =
          ( { model | session = session }, Cmd.none )
       LoadResult (Ok workflow) ->
          ( { model | workflow = Just workflow
-                   , loading = False }, Cmd.none )
+                   , loading = False }, drawInstanceGraph (E.string "TODO") )
 
       LoadResult (Err err) ->
          ( { model | workflow = Nothing
                    , loading = False }, Cmd.none )
-      _ -> (model, Cmd.none)
+
+      StateSelected state ->
+         ( { model | selectedState = state}, Cmd.none )
+
+      -- _ -> (model, Cmd.none)
 
 
 view : Model -> { title : String, content : Html msg }
 view model =
-    { title = ""
+    { title = "Workflow Instance"
     , content =
         case model.workflow of
             Just workflow ->
                 div []
-                [ dataTable workflow
-                , actionHistory workflow
+                [ dataTable model workflow
+                , graph model workflow
+                , actionHistory model workflow
                 ]
             Nothing ->
                 div []
@@ -72,8 +89,8 @@ view model =
     }
 
 
-dataTable: WorkflowSummary -> Html msg
-dataTable workflow =
+dataTable: Model -> WorkflowSummary -> Html msg
+dataTable model workflow =
     div []
     [ h2 [] [ text workflow.workflowType ]
     , linkTo (Route.DefinitionDetails workflow.workflowType) [text "Go to workflow definition"]
@@ -91,14 +108,22 @@ dataTable workflow =
     ]
 
 
-actionHistory: WorkflowSummary -> Html msg
-actionHistory workflow =
+graph: Model -> WorkflowSummary -> Html msg
+graph model workflow =
+    div [ class "svg-container" ]
+    [
+      Svg.svg [ id "instance-graph" ] []
+    ]
+
+
+actionHistory: Model -> WorkflowSummary -> Html msg
+actionHistory model workflow =
     case workflow.actions of
         Just actions ->
             div []
             [
               h2 [] [ text "Action history"],
-              table [class "pure-table"] [
+              table [class "pure-table workflow-actions"] [
                 thead []
                 [
                     tr []
@@ -112,16 +137,24 @@ actionHistory workflow =
                       ]
                 ],
                 tbody []
-                     (List.map actionHistoryRow actions)
+                     (List.map (actionHistoryRow model) actions)
                 ]
               ]
         Nothing ->
             text "No actions"
 
-actionHistoryRow: Action -> Html msg
-actionHistoryRow action =
-    tr []
-    [ td [] [ text "XXX" ] -- TODO compute ordinal
+actionHistoryRow: Model -> Action -> Html msg
+actionHistoryRow model action =
+    let
+      className = case model.selectedState of
+                Nothing -> "unselected"
+                Just state -> if state == action.state then
+                                "selected"
+                              else
+                                "unselected"
+    in
+    tr [class className]
+    [ td [] [ text "XXX" ] -- TODO compute ordinal indexedMap
     , td [] [ text action.state ]
     , td [] [ text action.stateText ]
     , td [] [ text (String.fromInt action.retryNo) ]
@@ -130,15 +163,15 @@ actionHistoryRow action =
     , td [] [ text "XXX" ] -- TODO compute duration
     ]
 
-stateVariables: WorkflowSummary -> Html msg
-stateVariables workflow =
+stateVariables: Model -> WorkflowSummary -> Html msg
+stateVariables model workflow =
     div []
     [
       h2 [] [ text "State variable go here"]
     ]
 
-manage: WorkflowSummary -> Html msg
-manage workflow =
+manage: model -> WorkflowSummary -> Html msg
+manage model workflow =
     div []
     [
       h2 [] [ text "Manage"]

@@ -19,3 +19,16 @@ elm-app test
 ```
 elm-app build
 ```
+
+
+## Adding dependecies
+
+For Elm
+```
+elm install elm/svg
+```
+
+For JavaScript
+```
+npm install d3-dagre
+```

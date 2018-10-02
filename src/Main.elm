@@ -1,4 +1,4 @@
-port module Main exposing (main)
+module Main exposing (main)
 {-| Main functionality and the entry point of the app.
 
 -}
@@ -51,8 +51,6 @@ type Msg
     | GotDefinitionDetailsMsg Page.DefinitionDetails.Msg
     | GotSearchMsg Page.Search.Msg
 
--- https://guide.elm-lang.org/interop/ports.html
-port graph : E.Value -> Cmd msg
 
 
 toSession : Model -> Maybe Session

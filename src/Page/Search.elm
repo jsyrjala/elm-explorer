@@ -30,8 +30,8 @@ init session queryParams =
     ( { session = session
       , businessKey = Maybe.withDefault "" queryParams.businessKey
       , externalId = Maybe.withDefault "" queryParams.externalId
-      , workflowId = Nothing
-      , parentWorkflowId = Nothing
+      , workflowId = String.toInt (Maybe.withDefault "" queryParams.workflowId)
+      , parentWorkflowId = String.toInt (Maybe.withDefault "" queryParams.parentWorkflowId)
       , searchResults = []
       , loading = False
       }

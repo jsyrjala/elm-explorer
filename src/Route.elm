@@ -10,6 +10,7 @@ module Route exposing
 {-| Route implements URL based routing.
 -}
 
+import Array
 import Browser.Navigation as Nav
 import Dict
 import Html exposing (Attribute, Html, a)
@@ -39,12 +40,19 @@ type alias SearchQueryParams =
     { workflowType : Maybe String
     , businessKey : Maybe String
     , externalId : Maybe String
+    , workflowId : Maybe String
+    , parentWorkflowId : Maybe String
     }
 
 
 searchParams : Url.Parser.Query.Parser SearchQueryParams
 searchParams =
-    Url.Parser.Query.map3 SearchQueryParams (Url.Parser.Query.string "type") (Url.Parser.Query.string "businessKey") (Url.Parser.Query.string "externalId")
+    Url.Parser.Query.map5 SearchQueryParams
+        (Url.Parser.Query.string "type")
+        (Url.Parser.Query.string "businessKey")
+        (Url.Parser.Query.string "externalId")
+        (Url.Parser.Query.string "workflowId")
+        (Url.Parser.Query.string "parentWorkflowId")
 
 
 {-| parser parses the URL to a `Route` instance.
@@ -79,11 +87,27 @@ replaceUrl key route =
 
 fromUrl : Url -> Maybe Route
 fromUrl url =
-    -- TODO convert also #foo?foo=123 to query params
-    -- Convert # fragment to path
+    let
+        path =
+            case url.fragment of
+                Just fragment ->
+                    Maybe.withDefault "" (List.head (String.split "?" fragment))
+
+                Nothing ->
+                    url.path
+
+        query =
+            case url.fragment of
+                Just fragment ->
+                    Array.get 1 (Array.fromList (String.split "?" fragment))
+
+                Nothing ->
+                    url.query
+    in
+    -- Convert # fragment to path and query
     -- This makes it *literally* the path, so we can proceed
     -- with parsing as if it had been a normal path all along.
-    { url | path = Maybe.withDefault url.path url.fragment, fragment = Nothing }
+    { url | path = path, query = query, fragment = Nothing }
         |> Parser.parse parser
 
 

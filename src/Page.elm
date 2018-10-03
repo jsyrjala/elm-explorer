@@ -61,7 +61,7 @@ viewMenu page =
             navbarLink page
 
         searchQueryParams =
-            SearchQueryParams Nothing Nothing Nothing Nothing Nothing
+            SearchQueryParams Nothing Nothing Nothing Nothing Nothing Nothing
     in
     [ linkTo Route.DefinitionList [ i [ class "ion-gear-a" ] [], text "\u{00A0}Definitions" ]
     , linkTo (Route.Search searchQueryParams) [ i [ class "ion-gear-a" ] [], text "\u{00A0}Search" ]

@@ -38,6 +38,7 @@ type Route
 
 type alias SearchQueryParams =
     { workflowType : Maybe String
+    , workflowState : Maybe String
     , businessKey : Maybe String
     , externalId : Maybe String
     , workflowId : Maybe String
@@ -47,8 +48,9 @@ type alias SearchQueryParams =
 
 searchParams : Url.Parser.Query.Parser SearchQueryParams
 searchParams =
-    Url.Parser.Query.map5 SearchQueryParams
+    Url.Parser.Query.map6 SearchQueryParams
         (Url.Parser.Query.string "type")
+        (Url.Parser.Query.string "state")
         (Url.Parser.Query.string "businessKey")
         (Url.Parser.Query.string "externalId")
         (Url.Parser.Query.string "workflowId")

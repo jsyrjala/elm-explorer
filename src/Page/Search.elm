@@ -3,11 +3,13 @@ module Page.Search exposing (Model, Msg, init, subscriptions, toSession, update,
 {-| Search Page or Workflow Instance listing
 -}
 
-import Api.NflowApi exposing (WorkflowSummary, searchWorkflows)
-import Html exposing (Attribute, Html, button, div, input, table, tbody, td, text, th, thead, tr)
+import Api.NflowApi exposing (WorkflowDef, WorkflowSummary, searchWorkflows)
+import Array
+import Html exposing (Attribute, Html, button, div, input, option, select, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (on, onClick, onInput, onSubmit)
 import Http
+import Json.Decode as D
 import Maybe exposing (andThen)
 import Route exposing (SearchQueryParams, linkTo)
 import Session exposing (Session)
@@ -18,36 +20,50 @@ type alias Model =
     { session : Session
     , businessKey : String
     , externalId : String
+    , workflowType : Maybe String
+    , workflowState : Maybe String
     , workflowId : Maybe Int
     , parentWorkflowId : Maybe Int
     , searchResults : List WorkflowSummary
-    , loading : Bool
+    , loading : Bool -- TODO replace with Maybe
+    , workflowDefs : Maybe (List WorkflowDef)
     }
-
-
-init : Session -> SearchQueryParams -> ( Model, Cmd Msg )
-init session queryParams =
-    ( { session = session
-      , businessKey = Maybe.withDefault "" queryParams.businessKey
-      , externalId = Maybe.withDefault "" queryParams.externalId
-      , workflowId = String.toInt (Maybe.withDefault "" queryParams.workflowId)
-      , parentWorkflowId = String.toInt (Maybe.withDefault "" queryParams.parentWorkflowId)
-      , searchResults = []
-      , loading = False
-      }
-    , Cmd.none
-      -- fetch worklow defs, and possible states
-    )
 
 
 type Msg
     = GotSession Session
     | BusinessKeyChange String
     | ExternalIdChange String
+    | WorkflowTypeChange (Maybe String)
+    | WorkflowStateChange (Maybe String)
     | WorkflowIdChange (Maybe Int)
     | ParentWorkflowIdChange (Maybe Int)
     | Search
     | SearchResult (Result Http.Error (List WorkflowSummary))
+    | WorkflowDefinitionResult (Result Http.Error (List WorkflowDef))
+
+
+init : Session -> SearchQueryParams -> ( Model, Cmd Msg )
+init session queryParams =
+    let
+        _ =
+            Debug.log "init" queryParams.workflowType
+    in
+    ( { session = session
+      , businessKey = Maybe.withDefault "" queryParams.businessKey
+      , externalId = Maybe.withDefault "" queryParams.externalId
+      , workflowType = queryParams.workflowType
+      , workflowState = queryParams.workflowState
+      , workflowId = String.toInt (Maybe.withDefault "" queryParams.workflowId)
+      , parentWorkflowId = String.toInt (Maybe.withDefault "" queryParams.parentWorkflowId)
+      , searchResults = []
+      , loading = False
+      , workflowDefs = Nothing
+      }
+    , Cmd.batch
+        [ Api.NflowApi.fetchWorkflowDefs session.config WorkflowDefinitionResult
+        ]
+    )
 
 
 toSession : Model -> Session
@@ -71,6 +87,20 @@ update msg model =
 
         ExternalIdChange value ->
             ( { model | externalId = value }, Cmd.none )
+
+        WorkflowTypeChange value ->
+            let
+                _ =
+                    Debug.log "WorkflowTypeChange" value
+            in
+            ( { model | workflowType = value }, Cmd.none )
+
+        WorkflowStateChange value ->
+            let
+                _ =
+                    Debug.log "WorkflowStateChange" value
+            in
+            ( { model | workflowState = value }, Cmd.none )
 
         WorkflowIdChange value ->
             ( { model | workflowId = value }, Cmd.none )
@@ -96,9 +126,11 @@ update msg model =
         SearchResult (Err err) ->
             ( { model | loading = False }, Cmd.none )
 
+        WorkflowDefinitionResult (Ok workflowDefs) ->
+            ( { model | workflowDefs = Just workflowDefs }, Cmd.none )
 
-
--- _ -> (model, Cmd.none)
+        WorkflowDefinitionResult (Err err) ->
+            ( { model | workflowDefs = Nothing }, Cmd.none )
 
 
 view : Model -> { title : String, content : Html Msg }
@@ -109,7 +141,9 @@ view model =
             -- Search msg must be either in form onSubmit or searchButton onClick
             -- but not both
             [ Html.form [ onSubmit Search ]
-                [ textField model.businessKey "Business Key" BusinessKeyChange
+                [ dropDown model.workflowType (workflowTypeEntries model "-- All workflow types --") "Workflow type" WorkflowTypeChange
+                , dropDown model.workflowState (workflowStateEntries model "-- All workflow states --") "Workflow states" WorkflowStateChange
+                , textField model.businessKey "Business Key" BusinessKeyChange
                 , textField model.externalId "External id" ExternalIdChange
                 , integerField model.workflowId "Workflow id" WorkflowIdChange
                 , integerField model.parentWorkflowId "Parent workflow id" ParentWorkflowIdChange
@@ -127,6 +161,39 @@ view model =
                         searchResultsTable results
             ]
     }
+
+
+workflowTypeEntries : Model -> String -> List Entry
+workflowTypeEntries model defaultTitle =
+    case model.workflowDefs of
+        Just workflowDefList ->
+            [ { key = "", value = defaultTitle } ]
+                ++ List.map (\w -> { key = w.definitionType, value = w.definitionType }) workflowDefList
+
+        Nothing ->
+            [ { key = "", value = defaultTitle } ]
+
+
+workflowStateEntries : Model -> String -> List Entry
+workflowStateEntries model defaultTitle =
+    case ( model.workflowType, model.workflowDefs ) of
+        ( Just workflowType, Just workflowDefList ) ->
+            let
+                l =
+                    List.head (List.filter (\w -> w.definitionType == workflowType) workflowDefList)
+
+                entries =
+                    case l of
+                        Nothing ->
+                            []
+
+                        Just workflowDef ->
+                            List.map (\x -> { key = x.id, value = x.id }) workflowDef.states
+            in
+            [ { key = "", value = defaultTitle } ] ++ entries
+
+        ( _, _ ) ->
+            [ { key = "", value = defaultTitle } ]
 
 
 searchResultsTable : List WorkflowSummary -> Html Msg
@@ -214,3 +281,40 @@ searchButton model =
     div []
         [ button [] [ text "Search" ]
         ]
+
+{-|
+  DropDowns.
+-}
+
+type alias Entry =
+    { key : String, value : String }
+
+
+dropDown : Maybe String -> List Entry -> String -> (Maybe String -> msg) -> Html msg
+dropDown maybeSelected entries title msg =
+    select [ onInput (\x -> msg (val x)) ]
+        (List.map (\entry -> dropDownOption maybeSelected entry msg) entries)
+
+
+val : String -> Maybe String
+val value =
+    case value of
+        "" ->
+            Nothing
+
+        x ->
+            Just x
+
+
+dropDownOption : Maybe String -> Entry -> (Maybe String -> msg) -> Html msg
+dropDownOption maybeSelected entry msg =
+    let
+        isSelected =
+            case maybeSelected of
+                Just selectedKey ->
+                    selectedKey == entry.key
+
+                Nothing ->
+                    False
+    in
+    option [ value entry.key, selected isSelected ] [ text entry.value ]

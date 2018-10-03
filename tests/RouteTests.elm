@@ -15,7 +15,7 @@ searchFragmentUrl =
 
 
 query =
-    "type=workT&businessKey=b-key&workflowId=99&parentWorkflowId=42&externalId=ext-key&unknownParam=value"
+    "type=workT&businessKey=b-key&workflowId=99&parentWorkflowId=42&externalId=ext-key&unknownParam=value&state=workS"
 
 
 searchFullParamsUrl =
@@ -27,11 +27,11 @@ searchFullParamsFragmentUrl =
 
 
 noSearchParams =
-    SearchQueryParams Nothing Nothing Nothing Nothing Nothing
+    SearchQueryParams Nothing Nothing Nothing Nothing Nothing Nothing
 
 
 allSearchParams =
-    SearchQueryParams (Just "workT") (Just "b-key") (Just "ext-key") (Just "99") (Just "42")
+    SearchQueryParams (Just "workT") (Just "workS") (Just "b-key") (Just "ext-key") (Just "99") (Just "42")
 
 
 fromUrlTest : Test

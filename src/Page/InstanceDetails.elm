@@ -7,6 +7,7 @@ import Api.NflowApi exposing (Action, WorkflowSummary, getWorkflowDetails)
 import Html exposing (Html, div, h2, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, href, id, style)
 import Http
+import Json.Decode as D
 import Json.Encode as E
 import Route exposing (linkTo)
 import Session exposing (Session)
@@ -19,7 +20,7 @@ import Util exposing (textElem)
 -- https://guide.elm-lang.org/interop/ports.html
 
 
-port instanceStateSelectedIn : (Maybe String -> msg) -> Sub msg
+port instanceStateSelectedIn : (E.Value -> msg) -> Sub msg
 
 
 port drawInstanceGraph : E.Value -> Cmd msg
@@ -37,7 +38,7 @@ type alias Model =
 type Msg
     = GotSession Session
     | LoadResult (Result Http.Error WorkflowSummary)
-    | StateSelected (Maybe String)
+    | StateSelected E.Value
 
 
 toSession : Model -> Session
@@ -87,12 +88,13 @@ update msg model =
             , Cmd.none
             )
 
-        StateSelected state ->
-            ( { model | selectedState = state }, Cmd.none )
+        StateSelected value ->
+            case D.decodeValue D.string value of
+                Result.Ok state ->
+                    ( { model | selectedState = Just state }, Cmd.none )
 
-
-
--- _ -> (model, Cmd.none)
+                Result.Err _ ->
+                    ( model, Cmd.none )
 
 
 view : Model -> { title : String, content : Html msg }
@@ -167,7 +169,12 @@ actionHistory model workflow =
                             ]
                         ]
                     , tbody []
-                        (List.map (actionHistoryRow model) actions)
+                        (let
+                            row index action =
+                                actionHistoryRow model (List.length actions - index) action
+                         in
+                         List.indexedMap row actions
+                        )
                     ]
                 ]
 
@@ -175,8 +182,8 @@ actionHistory model workflow =
             text "No actions"
 
 
-actionHistoryRow : Model -> Action -> Html msg
-actionHistoryRow model action =
+actionHistoryRow : Model -> Int -> Action -> Html msg
+actionHistoryRow model index action =
     let
         className =
             case model.selectedState of
@@ -191,7 +198,7 @@ actionHistoryRow model action =
                         "unselected"
     in
     tr [ class className ]
-        [ td [] [ text "XXX" ] -- TODO compute ordinal indexedMap
+        [ td [] [ text (String.fromInt index) ]
         , td [] [ text action.state ]
         , td [] [ text action.stateText ]
         , td [] [ text (String.fromInt action.retryNo) ]
